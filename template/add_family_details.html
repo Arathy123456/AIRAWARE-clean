@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Form Template</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+         body {
+            background-image: url('image1.jpeg');
+            font-family: Arial, sans-serif;
+            background-size: cover; /* Cover the entire viewport */
+            background-repeat: repeat; /* Prevent repeating */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+           # height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            width: 100%;
+            max-width: 600px; /* Adjust max-width for larger screens */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            background-color: #15c2ed;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .form-container {
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+           /* Set the background image */
+        }
+
+        .form-group {
+            margin: 15px 0;
+            text-align: left;
+            width: 100%;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #15c2ed;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #07a2f0;
+        }
+
+        .illustration {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body style="b">
+    <div class="container">
+        <div class="header">
+            <h1>Hello {{ username }}</h1>
+            <h1>Expand on Your Details</h1>
+        </div>
+        <div class="form-container">
+            <form method="POST" action="">
+                <!-- Name Fields -->
+                <div class="form-group">
+                    <label for="first-name"> Name</label>
+                    <input type="text" id="first-name" value="{{ username }}" name="question1" placeholder="" required>
+                </div>
+
+
+                <!-- Age Field -->
+                <div class="form-group">
+                    <label for="age">Age</label>
+                    <input type="number" id="age" placeholder="Age" name="question2" required min="0">
+                </div>
+<!--
+                 Gender Field -->
+                <div class="form-group">
+                    <label for="gender">Gender</label>
+                    <select id="gender" required>
+                        <option value="" disabled selected>Select your gender</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <!-- Health Questions -->
+              <div class="form-group">
+                    <label>Do you have any pre-existing health conditions?</label>
+                    <div>
+                        <input type="radio" id="yes" name="health" value="yes">
+                        <label for="yes">Yes</label>
+                    </div>
+                    <div>
+                        <input type="radio" id="no" name="health" value="no">
+                        <label for="no">No</label>
+                    </div>
+                    <div id="question3" class="question next-question">
+                <h3>Do you have any of the following respiratory conditions?</h3>
+                <div class="options">
+                    <label><input type="radio" name="disease" value="Asthma" onclick="showDiseaseQuestions('asthma')"> Asthma</label>
+                    <label><input type="radio" name="disease" value="COPD" onclick="showDiseaseQuestions('copd')"> COPD</label>
+                    <label><input type="radio" name="disease" value="Chronic Bronchitis" onclick="showDiseaseQuestions('chronicBronchitis')"> Chronic Bronchitis</label>
+                    <label><input type="radio" name="disease" value="Emphysema" onclick="showDiseaseQuestions('emphysema')"> Emphysema</label>
+                </div>
+
+            </div>
+                    <div id="asthma" class="question next-question">
+                <h3>What type of asthma do you have?</h3>
+                <div class="options">
+                    <label><input type="radio" name="asthmaType" value="Allergic" onclick="showEnvironmentalQuestion()"> Allergic Asthma</label>
+                    <label><input type="radio" name="asthmaType" value="Non-Allergic" onclick="showEnvironmentalQuestion()"> Non-Allergic Asthma</label>
+                    <label><input type="radio" name="asthmaType" value="Exercise-Induced" onclick="showEnvironmentalQuestion()"> Exercise-Induced Asthma</label>
+                </div>
+            </div>
+             <div id="copd" class="question next-question">
+                <h3>Which subtype of COPD do you have?</h3>
+                <div class="options">
+                    <label><input type="radio" name="copdType" value="Chronic Bronchitis" onclick="showEnvironmentalQuestion()"> Chronic Bronchitis</label>
+                    <label><input type="radio" name="copdType" value="Emphysema" onclick="showEnvironmentalQuestion()"> Emphysema</label>
+                    <label><input type="radio" name="copdType" value="Asthmatic Bronchitis" onclick="showEnvironmentalQuestion()"> Asthmatic Bronchitis</label>
+                </div>
+            </div>
+                    <div id="chronicBronchitis" class="question next-question">
+                <h3>What type of Chronic Bronchitis do you have?</h3>
+                <div class="options">
+                    <label><input type="radio" name="chronicBronchitisType" value="Acute" onclick="showEnvironmentalQuestion()"> Acute</label>
+                    <label><input type="radio" name="chronicBronchitisType" value="Chronic" onclick="showEnvironmentalQuestion()"> Chronic</label>
+                </div>
+            </div>
+
+            <!-- Emphysema Sub-questions -->
+       <div id="emphysema" class="question next-question">
+                <h3>What type of Emphysema do you have?</h3>
+                <div class="options">
+                    <label><input type="radio" name="emphysemaType" value="Centrilobular" onclick="showEnvironmentalQuestion()"> Centrilobular</label>
+                    <label><input type="radio" name="emphysemaType" value="Panlobular" onclick="showEnvironmentalQuestion()"> Panlobular</label>
+                </div>
+            </div>
+            <div id="environmentalQuestion" class="question next-question">
+                <h3>Do you live in an area with any of the following conditions? (Select all that apply)</h3>
+                <div class="options">
+                    <label><input type="checkbox" name="conditions" value="High air pollution"> High air pollution</label>
+                    <label><input type="checkbox" name="conditions" value="Urban area with heavy traffic"> Urban area with heavy traffic</label>
+                    <label><input type="checkbox" name="conditions" value="Rural area with exposure to chemicals"> Rural area with exposure to chemicals</label>
+                    <label><input type="checkbox" name="conditions" value="High industrial activity"> High industrial activity</label>
+                </div>
+            </div>
+            <div id="occupationalQuestion" class="question next-question">
+                <h3>Are you currently working or have you worked in any of the following occupations?</h3>
+                <div class="options">
+                    <label><input type="radio" name="occupation" value="Industrial Worker" onclick="showSubmit()"> Industrial Worker</label>
+                    <label><input type="radio" name="occupation" value="Healthcare Worker" onclick="showSubmit()"> Healthcare Worker</label>
+                    <label><input type="radio" name="occupation" value="Construction Worker" onclick="showSubmit()"> Construction Worker</label>
+                    <label><input type="radio" name="occupation" value="Agricultural Worker" onclick="showSubmit()"> Agricultural Worker</label>
+                </div>
+            </div>
+
+                </div>
+
+                <a href="{% url 'home' %}" class="btn btn-primary px-4">Login</a>
+                <button type="submit" class="preview-button">Submit</button>
+            </form>
+        </div>
+    </div>
+
+
+</body>
+</html>

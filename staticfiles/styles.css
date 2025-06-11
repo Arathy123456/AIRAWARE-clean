@@ -1,0 +1,251 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #f8f8f8;
+}
+
+.logo img {
+    height: 50px;
+}
+
+.search-bar input {
+    padding: 10px;
+    width: 300px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+}
+
+.nav-buttons button {
+    background-color: #008000;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    margin-left: 10px;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+.nav-buttons button img {
+    height: 20px;
+}
+
+main {
+    padding: 20px;
+}
+
+.breadcrumb a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.main-content {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.aqi-summary, .aqi-value, .aqi-map {
+    background-color: #fff;
+    border-radius: 10px;
+    margin: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    flex: 1;
+    text-align: center;
+    min-width: 150px;
+}
+.map-image{
+
+}
+.aqi-button{
+    width:
+}
+.aqi-value {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.aqi-value img {
+    width: 100px;
+    margin-top: 10px;
+}
+
+.aqi-map button {
+    background-color: green;
+    color:white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+.moderate {
+    background-color: #ffc107;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+.additional-info {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.most-polluted, .current-aqi {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    flex: 1;
+    min-width: 250px;
+}
+
+.most-polluted table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.most-polluted th, .most-polluted td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.most-polluted .high {
+    color: #d9534f;
+}
+
+.current-aqi .aqi-details {
+    display: flex;
+    justify-content: space-around;
+    margin: 20px 0;
+    flex-wrap: wrap;
+}
+
+.current-aqi .aqi-details div {
+    text-align: center;
+    margin: 10px;
+}
+
+@media (max-width: 768px) {
+    .main-content, .additional-info {
+        flex-direction: column;
+    }
+
+    .search-bar input {
+        width: 100%;
+    }
+}
+.additional-info {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.most-polluted, .least-polluted, .current-aqi, .weather-conditions {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    flex: 1;
+    min-width: 250px;
+}
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+header h1 {
+    font-size: 2em;
+    color: #007bff;
+}
+
+header p {
+    font-size: 1.2em;
+    color: #555;
+}
+
+.solutions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    max-width: 1200px;
+}
+
+.solution {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    flex: 1 1 200px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s;
+}
+
+.solution:hover {
+    transform: scale(1.05);
+}
+
+.solution img {
+    max-width: 100px;
+    margin-bottom: 15px;
+}
+
+.solution h2 {
+    font-size: 1.5em;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.solution p {
+    color: #666;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .solutions {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .solution {
+        width: 90%;
+    }
+}

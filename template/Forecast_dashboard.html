@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Forecast Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --success-color: #4cc9f0;
+            --danger-color: #f72585;
+            --warning-color: #f8961e;
+            --info-color: #90e0ef;
+            --light-bg: #f8f9fa;
+            --dark-bg: #212529;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            padding: 0;
+            margin: 0;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .dashboard-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .dashboard-header h2 {
+            margin: 0;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+
+        .user-greeting {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            border: none;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            background-color: #fff;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            padding: 15px 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 20px;
+        }
+
+        .parameter-selector {
+            display: flex;
+            overflow-x: auto;
+            padding: 10px 0;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+
+        .parameter-btn {
+            border: none;
+            background-color: #e9ecef;
+            color: #495057;
+            border-radius: 20px;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+        .parameter-btn:hover {
+            background-color: #dee2e6;
+        }
+
+        .parameter-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .parameter-btn .pollutant-icon {
+            margin-right: 5px;
+        }
+
+        .forecast-table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th, table td {
+            padding: 12px 15px;
+            text-align: left;
+        }
+
+        table th {
+            background-color: #f8f9fa;
+            color: #495057;
+            font-weight: 600;
+        }
+
+        table tr {
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .text-success {
+            color: #2ecc71 !important;
+        }
+
+        .text-warning {
+            color: #f39c12 !important;
+        }
+
+        .text-danger {
+            color: #e74c3c !important;
+        }
+
+        .health-recommendations {
+            list-style: none;
+            padding: 0;
+        }
+
+        .health-recommendations li {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--primary-color);
+            background-color: #f8f9fa;
+            border-radius: 0 5px 5px 0;
+        }
+
+        .health-recommendations li i {
+            color: var(--primary-color);
+            margin-right: 10px;
+        }
+
+        .date-picker-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .date-picker-wrapper {
+            display: flex;
+            align-items: center;
+            background: white;
+            border-radius: 30px;
+            padding: 8px 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border: 1px solid #e9ecef;
+            width: fit-content;
+        }
+
+        .date-picker-wrapper i {
+            color: var(--primary-color);
+            margin-right: 10px;
+        }
+
+        #forecastDatePicker {
+            border: none;
+            background: transparent;
+            font-weight: 500;
+            color: #495057;
+            width: 140px;
+            outline: none;
+            padding: 4px 0;
+        }
+
+        .pollution-status-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .badge-item {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            flex: 1;
+            min-width: 120px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            text-align: center;
+            transition: transform 0.2s ease;
+        }
+
+        .badge-item:hover {
+            transform: scale(1.05);
+        }
+
+        .badge-item .title {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+
+        .badge-item .value {
+            font-size: 20px;
+            font-weight: 600;
+            color: #343a40;
+        }
+
+        .badge-item .status {
+            font-size: 12px;
+            margin-top: 5px;
+            font-weight: 500;
+            padding: 3px 8px;
+            border-radius: 12px;
+            display: inline-block;
+        }
+
+        .status-good {
+            background-color: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+        }
+
+        .status-moderate {
+            background-color: rgba(243, 156, 18, 0.2);
+            color: #f39c12;
+        }
+
+        .status-unhealthy {
+            background-color: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+
+        /* Tooltip styles */
+        .tooltip-container {
+            position: relative;
+            display: inline-block;
+            margin-left: 5px;
+        }
+
+        .tooltip-icon {
+            color: #6c757d;
+            cursor: pointer;
+        }
+
+        .tooltip-text {
+            visibility: hidden;
+            width: 200px;
+            background-color: #343a40;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #343a40 transparent transparent transparent;
+        }
+
+        .tooltip-container:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Dark mode toggle */
+        .dark-mode-toggle {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .dark-mode-toggle:hover {
+            transform: rotate(30deg);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .pollution-status-badges {
+                flex-direction: column;
+            }
+
+            .badge-item {
+                width: 100%;
+            }
+
+            .chart-container {
+                height: 300px;
+            }
+        }
+
+        /* Dashboard tabs */
+        .dashboard-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 10px;
+        }
+
+        .dashboard-tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+            color: #6c757d;
+            transition: all 0.2s ease;
+        }
+
+        .dashboard-tab:hover {
+            color: var(--primary-color);
+        }
+
+        .dashboard-tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        /* Print friendly styles */
+        @media print {
+            .dashboard-header {
+                background: #f8f9fa !important;
+                color: #212529 !important;
+                box-shadow: none !important;
+            }
+
+            .card {
+                box-shadow: none !important;
+                border: 1px solid #dee2e6 !important;
+            }
+
+            .parameter-selector, .dark-mode-toggle, .date-picker-container {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <!--<div class="user-greeting">
+                <h2><i class="fas fa-wind me-2"></i> Hello {{ username }} 👋</h2>
+                <button class="dark-mode-toggle" id="darkModeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>-->
+            <div class="mt-2">
+                <small>Real-Time Atmospheric Condition Forecasting</small>
+            </div>
+        </div>
+
+        <div class="dashboard-tabs">
+            <div class="dashboard-tab active" data-tab="forecast">
+                <i class="fas fa-chart-line me-2"></i> Forecast
+            </div>
+            <a href="historical_dashboard.html" class="text-decoration-none text-dark">
+                <!--<div class="dashboard-tab" data-tab="history">
+                    <i class="fas fa-history me-2"></i> History
+                </div>-->
+            </a>
+            <a href="{% url 'health_report' %}" class="text-decoration-none text-dark">
+                <div class="dashboard-tab" data-tab="health">
+                <i class="fas fa-heartbeat me-2"></i> Health Impact
+                </div>
+            </a>
+            <div class="dropdown d-inline-block">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="historyDropdownButton" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-download me-1"></i> Export
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="historyDropdownButton">
+                    <li><a class="dropdown-item" href="#" id="exportPNG"><i class="far fa-file-image me-2"></i> Download as PNG</a></li>
+                    <li><a class="dropdown-item" href="#" id="exportCSV"><i class="far fa-file-excel me-2"></i> Download as CSV</a></li>
+                    <li><a class="dropdown-item" href="#" id="printChart"><i class="fas fa-print me-2"></i> Print Chart</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="date-picker-container">
+            <div class="date-picker-wrapper">
+                <i class="far fa-calendar-alt"></i>
+                <input type="text" id="forecastDatePicker" placeholder="Select a date" class="form-control">
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="chart-container">
+                        <div class="forecast-title">
+                            <h3><i class="fas fa-chart-line"></i> Air Quality Forecast</h3>
+                            <span class="forecast-badge">Updated: {{ forecast_updated_at }}</span>
+                        </div>
+
+                        <div class="parameter-controls">
+                            {% for param in aqi_parameters %}
+                            <button class="parameter-btn {% if forloop.first %}active{% endif %}" data-param="{{ param }}">
+                                {% if param == 'pm25' %}PM2.5
+                                {% elif param == 'pm10' %}PM10
+                                {% elif param == 'no2' %}NO₂
+                                {% elif param == 'o3' %}O₃
+                                {% elif param == 'so2' %}SO₂
+                                {% elif param == 'co' %}CO
+                                {% elif param == 'nh3' %}NH₃
+                                {% endif %}
+                            </button>
+                            {% endfor %}
+                        </div>
+                        <canvas id="forecastChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-table me-2"></i> Forecast Table
+                    </div>
+                    <div class="col-12">
+                        <div class="metric-card forecast-section">
+                            <div class="table-responsive">
+                                <table class="forecast-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Value</th>
+                                            <th>Compared to WHO Limit</th>
+                                            <th>Health Impact</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="forecast-table-body">
+                                        <!-- Will be populated by JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-heartbeat me-2"></i> Health Recommendations
+                    </div>
+                    <div class="card-body">
+                        <ul class="health-recommendations" id="health-recommendations">
+                            <!-- Recommendations will be inserted dynamically -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="forecastResult" class="mt-4"></div>
+    </div>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Define the forecast data (this will be injected from Django)
+        const forecastData = {{ forecast_data|safe }};
+
+        // Define WHO limits for reference
+        const WHO_LIMITS = {
+            "co": 4,
+            "so2": 40,
+            "pm25": 15,
+            "pm10": 45,
+            "no2": 28,
+            "o3": 64,
+            "nh3": 200
+        };
+
+        // Health assessment data
+        const healthAssessment = {
+            respiratory_conditions: "{{ assessment.respiratory_conditions }}".split(','),
+            living_environment: "{{ assessment.living_environment }}".split(','),
+            smoking_history: "{{ assessment.smoking_history }}",
+            occupational_exposure: "{{ assessment.occupational_exposure }}"
+        };
+
+        // Check if user has specific conditions
+        const hasAsthma = healthAssessment.respiratory_conditions.includes("Asthma");
+        const hasCOPD = healthAssessment.respiratory_conditions.includes("COPD");
+        const isSmoker = healthAssessment.smoking_history.includes("Current smoker");
+
+        // Function to determine health impact based on parameter and value
+        function getHealthImpact(parameter, value) {
+            const limit = WHO_LIMITS[parameter];
+
+            // Adjust limit based on health conditions
+            let adjustedLimit = limit;
+            if (hasAsthma || hasCOPD) {
+                adjustedLimit *= 0.7; // More sensitive threshold for respiratory conditions
+            }
+            if (isSmoker) {
+                adjustedLimit *= 0.8; // More sensitive threshold for smokers
+            }
+
+            const ratio = value / adjustedLimit;
+
+            if (ratio <= 0.8) {
+                return { status: "Good", class: "text-success" };
+            } else if (ratio <= 1.2) {
+                return { status: "Moderate", class: "text-warning" };
+            } else {
+                return { status: "Unhealthy", class: "text-danger" };
+            }
+        }
+
+        // Initialize chart with default parameter (pm25)
+        let chart;
+        function initChart(parameter = 'pm25') {
+            const ctx = document.getElementById('forecastChart').getContext('2d');
+
+            // Get parameter display name
+            const paramNames = {
+                'pm25': 'PM2.5',
+                'pm10': 'PM10',
+                'no2': 'NO₂',
+                'o3': 'O₃',
+                'so2': 'SO₂',
+                'co': 'CO',
+                'nh3': 'NH₃'
+            };
+
+            // Get parameter color
+            const paramColors = {
+                'pm25': 'rgba(255, 99, 132, 1)',
+                'pm10': 'rgba(54, 162, 235, 1)',
+                'no2': 'rgba(255, 206, 86, 1)',
+                'o3': 'rgba(75, 192, 192, 1)',
+                'so2': 'rgba(153, 102, 255, 1)',
+                'co': 'rgba(255, 159, 64, 1)',
+                'nh3': 'rgba(90, 180, 50, 1)'
+            };
+
+            // Extract dates and values
+            const dates = forecastData.map(entry => entry.day);
+            const values = forecastData.map(entry => entry[`${parameter}_max`]);
+
+            // Add WHO limit reference line
+            const whoLimit = WHO_LIMITS[parameter];
+            const limits = Array(dates.length).fill(whoLimit);
+
+            // Destroy previous chart if exists
+            if (chart) {
+                chart.destroy();
+            }
+
+            // Calculate min and max values for better axis scaling
+            const maxValue = Math.max(...values, whoLimit) * 1.1;
+            const minValue = Math.min(...values, whoLimit) * 0.9;
+
+            // Create new chart
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        {
+                            label: paramNames[parameter],
+                            data: values,
+                            backgroundColor: paramColors[parameter].replace('1', '0.2'),
+                            borderColor: paramColors[parameter],
+                            borderWidth: 2,
+                            tension: 0.3,
+                            pointRadius: 5,
+                            pointHoverRadius: 8,
+                            pointHoverBackgroundColor: paramColors[parameter],
+                            pointHoverBorderColor: '#fff',
+                            pointHoverBorderWidth: 2,
+                            fill: true
+                        },
+                        {
+                            label: 'WHO Limit',
+                            data: limits,
+                            borderColor: 'rgba(128, 128, 128, 0.7)',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            fill: false,
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: 'rgba(255, 255, 255, 0.1)',
+                            borderWidth: 1,
+                            padding: 10,
+                            titleFont: {
+                                size: 14,
+                                weight: 'bold'
+                            },
+                            bodyFont: {
+                                size: 13
+                            },
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    const ratio = (value / whoLimit * 100).toFixed(0);
+
+                                    let status = '';
+                                    if (ratio <= 80) status = '(Safe)';
+                                    else if (ratio <= 120) status = '(Borderline)';
+                                    else status = '(Exceeds)';
+
+                                    return `${context.dataset.label}: ${value} μg/m³ - ${ratio}% of WHO limit ${status}`;
+                                }
+                            }
+                        },
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    size: 12
+                                },
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        },
+                        y: {
+                            beginAtZero: false,
+                            min: minValue,
+                            max: maxValue,
+                            title: {
+                                display: true,
+                                text: 'Concentration (μg/m³)',
+                                font: {
+                                    size: 12,
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            ticks: {
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    },
+                    animations: {
+                        tension: {
+                            duration: 1000,
+                            easing: 'linear'
+                        }
+                    }
+                }
+            });
+
+            // Update forecast table
+            updateForecastTable(parameter);
+
+            // Update health recommendations
+            updateHealthRecommendations(parameter);
+        }
+
+        // Update the forecast table
+        function updateForecastTable(parameter) {
+            const tableBody = document.getElementById('forecast-table-body');
+            tableBody.innerHTML = '';
+
+            forecastData.forEach(day => {
+                const value = day[`${parameter}_max`];
+                const impact = getHealthImpact(parameter, value);
+                const whoLimit = WHO_LIMITS[parameter];
+
+                const ratio = (value / whoLimit * 100).toFixed(0);
+                let comparisonText = '';
+                let comparisonClass = '';
+
+                if (ratio <= 80) {
+                    comparisonText = `${ratio}% of limit (Safe)`;
+                    comparisonClass = 'text-success';
+                } else if (ratio <= 120) {
+                    comparisonText = `${ratio}% of limit (Borderline)`;
+                    comparisonClass = 'text-warning';
+                } else {
+                    comparisonText = `${ratio}% of limit (Exceeds)`;
+                    comparisonClass = 'text-danger';
+                }
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${day.day}</td>
+                    <td>${value}</td>
+                    <td class="${comparisonClass}">${comparisonText}</td>
+                    <td class="${impact.class}">${impact.status}</td>
+                `;
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Update health recommendations based on forecast data and health assessment
+        function updateHealthRecommendations(parameter) {
+            const recommendationsList = document.getElementById('health-recommendations');
+            recommendationsList.innerHTML = '';
+
+            // Extract maximum values for the selected parameter
+            const maxValue = Math.max(...forecastData.map(day => day[`${parameter}_max`]));
+            const whoLimit = WHO_LIMITS[parameter];
+
+            // Generate recommendations based on parameter, value, and health conditions
+            const recommendations = [];
+
+            // PM2.5 recommendations
+            if (parameter === 'pm25' && maxValue > whoLimit) {
+                if (hasAsthma || hasCOPD) {
+                    recommendations.push('Consider using an N95 mask when outdoors as PM2.5 levels will exceed recommended limits');
+                    recommendations.push('Keep rescue medications accessible and monitor respiratory symptoms closely');
+                }
+                if (isSmoker) {
+                    recommendations.push('High PM2.5 levels combined with smoking significantly increases respiratory risks');
+                }
+                recommendations.push('Consider using air purifiers indoors during high PM2.5 periods');
+            }
+
+            // PM10 recommendations
+            if (parameter === 'pm10' && maxValue > whoLimit) {
+                recommendations.push('Reduce outdoor activities during peak pollution hours');
+                if (hasAsthma || hasCOPD) {
+                    recommendations.push('Monitor for increased coughing or wheezing as PM10 levels will be elevated');
+                }
+            }
+
+            // NO2 recommendations
+            if (parameter === 'no2' && maxValue > whoLimit) {
+                recommendations.push('Avoid high-traffic areas where NO₂ levels are typically higher');
+                if (hasAsthma) {
+                    recommendations.push('NO₂ can trigger asthma symptoms - follow your asthma action plan');
+                }
+            }
+
+            // O3 recommendations
+            if (parameter === 'o3' && maxValue > whoLimit) {
+                recommendations.push('Limit outdoor activities between 11am and 5pm when ozone levels are highest');
+                if (hasAsthma || hasCOPD) {
+                    recommendations.push('Ozone can cause airway inflammation - stay in air-conditioned environments');
+                }
+            }
+
+            // SO2 recommendations
+            if (parameter === 'so2' && maxValue > whoLimit) {
+                if (hasAsthma || hasCOPD) {
+                    recommendations.push('SO₂ can cause bronchoconstriction - consider staying indoors');
+                }
+                recommendations.push('Avoid industrial areas where SO₂ levels are typically higher');
+            }
+
+            // Default recommendation if no specific conditions triggered
+            if (recommendations.length === 0) {
+                if (maxValue <= whoLimit * 0.8) {
+                    recommendations.push('Based on your health profile, no specific precautions needed for this pollutant');
+                } else {
+                    recommendations.push('Monitor air quality and limit prolonged outdoor exposure when possible');
+                }
+            }
+
+            // Add recommendations to the list
+            recommendations.forEach(recommendation => {
+                const li = document.createElement('li');
+                li.innerHTML = `<i class="fas fa-info-circle"></i> <span>${recommendation}</span>`;
+                recommendationsList.appendChild(li);
+            });
+        }
+
+        // Handle parameter button clicks
+        document.querySelectorAll('.parameter-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                // Update active state
+                document.querySelectorAll('.parameter-btn').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+
+                // Update chart and table
+                const parameter = this.getAttribute('data-param');
+                initChart(parameter);
+            });
+        });
+
+        // Initialize with PM2.5 data
+        document.addEventListener('DOMContentLoaded', function() {
+            initChart('pm25');
+
+            // Update the badge statuses
+            updatePollutantBadges();
+
+            // Set up polling for latest data
+            function fetchLatestData() {
+                $.ajax({
+                    url: "{% url 'health_report' %}",
+                    type: "GET",
+                    dataType: "json",
+                    headers: { "X-Requested-With": "XMLHttpRequest" },
+                    success: function(data) {
+                        if (data.aqi_data) {
+                            updateAqiContainer(data.aqi_data);
+                        }
+                        if (data.forecast_data) {
+                            // Update forecast data and refresh chart
+                            forecastData = data.forecast_data;
+                            const activeParam = document.querySelector('.parameter-btn.active').getAttribute('data-param');
+                            initChart(activeParam);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("AJAX error:", error);
+                    }
+                });
+            }
+
+            function updateAqiContainer(aqiData) {
+                $('#co').text(aqiData.co_level || 'N/A');
+                $('#no2').text(aqiData.no2_level || 'N/A');
+                $('#pm25').text(aqiData.pm25_level || 'N/A');
+                $('#pm10').text(aqiData.pm10_level || 'N/A');
+                $('#so2').text(aqiData.so2_level || 'N/A');
+                $('#nh3').text(aqiData.nh3_level || 'N/A');
+                $('#o3').text(aqiData.o3_level || 'N/A');
+
+                // Update badge status classes
+                updatePollutantBadges();
+            }
+
+            // Function to update pollutant badge status classes
+            function updatePollutantBadges() {
+                const pollutants = ['pm25', 'pm10', 'no2', 'o3', 'so2', 'co', 'nh3'];
+
+                pollutants.forEach(pollutant => {
+                    const element = document.getElementById(pollutant);
+                    if (element && element.textContent !== 'N/A' && element.textContent !== '-') {
+                        const value = parseFloat(element.textContent);
+                        const limit = WHO_LIMITS[pollutant];
+                        const ratio = value / limit;
+
+                        const statusElement = element.parentElement.querySelector('.status');
+                        if (statusElement) {
+                            statusElement.classList.remove('status-good', 'status-moderate', 'status-unhealthy');
+
+                            if (ratio <= 0.8) {
+                                statusElement.classList.add('status-good');
+                                statusElement.textContent = 'Good';
+                            } else if (ratio <= 1.2) {
+                                statusElement.classList.add('status-moderate');
+                                statusElement.textContent = 'Moderate';
+                            } else {
+                                statusElement.classList.add('status-unhealthy');
+                                statusElement.textContent = 'Unhealthy';
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Poll for updates every 5 minutes
+            setInterval(fetchLatestData, 300000);
+
+            // Handle dark mode toggle
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            if (darkModeToggle) {
+                const body = document.body;
+
+                darkModeToggle.addEventListener('click', function() {
+                    body.classList.toggle('dark-mode');
+
+                    if (body.classList.contains('dark-mode')) {
+                        darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+                        applyDarkMode();
+                    } else {
+                        darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+                        removeDarkMode();
+                    }
+                });
+            }
+
+            function applyDarkMode() {
+                document.documentElement.style.setProperty('--light-bg', '#212529');
+                document.documentElement.style.setProperty('--dark-bg', '#f8f9fa');
+
+                // Apply dark mode to chart
+                Chart.defaults.color = '#e9ecef';
+                const activeParam = document.querySelector('.parameter-btn.active').getAttribute('data-param');
+                initChart(activeParam);
+            }
+
+            function removeDarkMode() {
+                document.documentElement.style.setProperty('--light-bg', '#f8f9fa');
+                document.documentElement.style.setProperty('--dark-bg', '#212529');
+
+                // Apply light mode to chart
+                Chart.defaults.color = '#666';
+                const activeParam = document.querySelector('.parameter-btn.active').getAttribute('data-param');
+                initChart(activeParam);
+            }
+
+            // Handle export buttons
+            document.getElementById('exportPNG').addEventListener('click', function(e) {
+                e.preventDefault();
+
+                // Convert chart to image
+                const canvas = document.getElementById('forecastChart');
+                const image = canvas.toDataURL('image/png');
+
+                // Create download link
+                const downloadLink = document.createElement('a');
+                downloadLink.href = image;
+                downloadLink.download = 'forecast_chart.png';
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+            });
+
+            document.getElementById('exportCSV').addEventListener('click', function(e) {
+                e.preventDefault();
+
+                // Convert forecast data to CSV
+                const activeParam = document.querySelector('.parameter-btn.active').getAttribute('data-param');
+                const headers = ['Date', `${activeParam.toUpperCase()} Value`, 'WHO Limit'];
+
+                let csvContent = headers.join(',') + '\n';
+
+                forecastData.forEach(day => {
+                    const row = [
+                        day.day,
+                        day[`${activeParam}_max`],
+                        WHO_LIMITS[activeParam]
+                    ];
+                    csvContent += row.join(',') + '\n';
+                });
+
+                // Create download link
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const downloadLink = document.createElement('a');
+                downloadLink.href = url;
+                downloadLink.download = 'forecast_data.csv';
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+                window.URL.revokeObjectURL(url);
+            });
+
+            document.getElementById('printChart').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.print();
+            });
+        });
+
+        flatpickr("#forecastDatePicker", {
+            dateFormat: "Y-m-d",
+            onChange: function(selectedDates, dateStr, instance) {
+                if (dateStr) {
+                    fetchForecastByDate(dateStr);
+                }
+            }
+        });
+
+        function fetchForecastByDate(date) {
+            fetch("/get_forecast_by_date/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: `date=${date}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById("forecastResult");
+                if (data.status === "success") {
+                    // Create a more visually appealing display for date results
+                    const pollutantNames = {
+                        'nh3': 'NH₃',
+                        'no2': 'NO₂',
+                        'o3': 'O₃',
+                        'pm25': 'PM2.5',
+                        'pm10': 'PM10',
+                        'so2': 'SO₂',
+                        'co': 'CO'
+                    };
+
+                    // Create date-specific card
+                    container.innerHTML = `
+                        <div class="card mt-4">
+                            <div class="card-header">
+                                <i class="fas fa-calendar-day me-2"></i> Forecast for ${date}
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>NH₃</th>
+                                                <th>NO₂</th>
+                                                <th>O₃</th>
+                                                <th>PM2.5</th>
+                                                <th>PM10</th>
+                                                <th>SO₂</th>
+                                                <th>CO</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${data.data.map(row => `
+                                                <tr>
+                                                    <td>${row.day}</td>
+                                                    <td>${row.nh3}</td>
+                                                    <td>${row.no2}</td>
+                                                    <td>${row.o3}</td>
+                                                    <td>${row.pm25}</td>
+                                                    <td>${row.pm10}</td>
+                                                    <td>${row.so2}</td>
+                                                    <td>${row.co}</td>
+                                                </tr>`).join("")}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i> No forecast available for ${date}
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        // Add extra styles for dark mode
+        const darkModeStyles = document.createElement('style');
+        darkModeStyles.textContent = `
+            body.dark-mode {
+                background-color: #1a1d20;
+                color: #e9ecef;
+            }
+
+            body.dark-mode .card {
+                background-color: #212529;
+                border-color: #343a40;
+            }
+
+            body.dark-mode .card-header {
+                background-color: #2c3034;
+                color: #e9ecef;
+                border-color: #343a40;
+            }
+
+            body.dark-mode .table {
+                color: #e9ecef;
+            }
+
+            body.dark-mode .table thead th {
+                background-color: #2c3034;
+                color: #e9ecef;
+                border-color: #343a40;
+            }
+
+            body.dark-mode .table td,
+            body.dark-mode .table th {
+                border-color: #343a40;
+            }
+
+            body.dark-mode .table-hover tbody tr:hover {
+                background-color: #2c3034;
+                color: #e9ecef;
+            }
+
+            body.dark-mode .parameter-btn {
+                background-color: #343a40;
+                color: #e9ecef;
+            }
+
+            body.dark-mode .parameter-btn:hover {
+                background-color: #495057;
+            }
+
+            body.dark-mode .parameter-btn.active {
+                background-color: var(--primary-color);
+            }
+
+            body.dark-mode .date-picker-wrapper {
+                background-color: #212529;
+                border-color: #343a40;
+            }
+
+            body.dark-mode #forecastDatePicker {
+                color: #e9ecef;
+            }
+
+            body.dark-mode .badge-item {
+                background-color: #212529;
+                color: #e9ecef;
+            }
+
+            body.dark-mode .badge-item .title {
+                color: #adb5bd;
+            }
+
+            body.dark-mode .badge-item .value {
+                color: #e9ecef;
+            }
+
+            body.dark-mode .health-recommendations li {
+                background-color: #2c3034;
+            }
+
+            body.dark-mode .dropdown-menu {
+                background-color: #212529;
+                border-color: #343a40;
+            }
+
+            body.dark-mode .dropdown-item {
+                color: #e9ecef;
+            }
+
+            body.dark-mode .dropdown-item:hover {
+                background-color: #2c3034;
+            }
+
+            body.dark-mode .alert-warning {
+                background-color: #2c3034;
+                color: #ffc107;
+                border-color: #343a40;
+            }
+
+            body.dark-mode .btn-outline-secondary {
+                color: #e9ecef;
+                border-color: #6c757d;
+            }
+        `;
+        document.head.appendChild(darkModeStyles);
+    </script>
+</body>
+</html>

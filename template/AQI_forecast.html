@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AQI Forecast Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1d4ed8;
+            --success-color: #10b981;
+            --warning-color: #ef4444;
+            --bg-gradient: white;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            color: #334155;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.95), rgba(29, 78, 216, 0.95));
+            padding: 2rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            box-shadow: var(--card-shadow);
+            color: white;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .back-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .forecast-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .forecast-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease;
+        }
+
+        .forecast-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .forecast-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+
+        .metrics-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .metric-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .metric-icon {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #334155;
+            margin: 0.5rem 0;
+        }
+
+        .aqi-status {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        .status-good { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+        .status-moderate { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+        .status-poor { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+
+        .chart-container {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+            margin-top: 2rem;
+        }
+
+        .recommendation-card {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.05), rgba(29, 78, 216, 0.05));
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-top: 2rem;
+            border: 1px solid rgba(37, 99, 235, 0.1);
+        }
+
+        .recommendation-list {
+            margin-top: 1rem;
+            list-style: none;
+        }
+
+        .recommendation-list li {
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .recommendation-list i {
+            color: var(--primary-color);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .forecast-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="back-button" href="{% url 'risk_assessment'  %}">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </button>
+            <h1><i class="fas fa-chart-line"></i> AQI Forecast</h1>
+            <p>7-Day Air Quality Forecast for Your Location</p>
+        </div>
+
+        <div class="forecast-grid">
+            <div class="forecast-card animate-float">
+                <div class="forecast-header">
+                    <h3><i class="fas fa-calendar-day"></i> Today's Forecast</h3>
+                </div>
+
+                <div class="aqi-status status-moderate">Moderate</div>
+                <canvas id="todayChart" height="200"></canvas>
+            </div>
+
+            <div class="forecast-card animate-float">
+                <div class="forecast-header">
+                    <h3><i class="fas fa-calendar-week"></i> Weekly Trend</h3>
+                </div>
+                <canvas id="weeklyChart" height="200"></canvas>
+            </div>
+        </div>
+
+        <div class="metrics-container">
+            <div class="metric-card animate-float">
+                <i class="fas fa-wind metric-icon"></i>
+                <h3>PM2.5 Forecast</h3>
+                <div class="metric-value" id="pm25-forecast">{{ pm25_forecast }}</div>
+                <p>Expected trend: Improving</p>
+            </div>
+
+            <div class="metric-card animate-float">
+                <i class="fas fa-cloud metric-icon"></i>
+                <h3>PM10 Forecast</h3>
+                <div class="metric-value" id="pm10-forecast">{{ pm10_forecast }}</div>
+                <p>Expected trend: Stable</p>
+            </div>
+
+            <div class="metric-card animate-float">
+                <i class="fas fa-smog metric-icon"></i>
+                <h3>NO2 Forecast</h3>
+                <div class="metric-value" id="no2-forecast">{{ no2_forecast }}</div>
+                <p>Expected trend: Decreasing</p>
+            </div>
+        </div>
+
+
+        <div class="recommendation-card">
+            <h3><i class="fas fa-lightbulb"></i> Recommendations</h3>
+            <ul class="recommendation-list">
+                <li><i class="fas fa-check-circle"></i> Consider indoor activities during peak pollution hours</li>
+                <li><i class="fas fa-check-circle"></i> Keep windows closed during high AQI periods</li>
+                <li><i class="fas fa-check-circle"></i> Use air purifiers if available</li>
+                <li><i class="fas fa-check-circle"></i> Wear masks when outdoor activity is necessary</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Today's hourly forecast chart
+        const todayCtx = document.getElementById('todayChart').getContext('2d');
+        new Chart(todayCtx, {
+            type: 'line',
+            data: {
+                labels: ['6AM', '9AM', '12PM', '3PM', '6PM', '9PM'],
+                datasets: [{
+                    label: 'Hourly AQI',
+                    data: [45, 52, 58, 60, 55, 48],
+                    borderColor: '#2563eb',
+                    tension: 0.4,
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Weekly forecast chart
+        // Weekly forecast chart with all parameters
+const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
+new Chart(weeklyCtx, {
+    type: 'line',
+    data: {
+        labels: ['Thu', 'Fri', 'Sat', 'Sun'],
+        datasets: [
+            {
+                label: 'PM2.5',
+                data: [35, 40, 38, 42],
+                borderColor: '#FF5733',
+                backgroundColor: 'rgba(255, 87, 51, 0.2)',
+                fill: true,
+                tension: 0.4
+            },
+            {
+                label: 'PM10',
+                data: [76, 50, 47, 49],
+                borderColor: '#33FF57',
+                backgroundColor: 'rgba(51, 255, 87, 0.2)',
+                fill: true,
+                tension: 0.4
+            },
+            {
+                label: 'NH3',
+                data: [20, 22, 21, 23],
+                borderColor: '#5733FF',
+                backgroundColor: 'rgba(87, 51, 255, 0.2)',
+                fill: true,
+                tension: 0.4
+            },
+            {
+                label: 'NO3',
+                data: [18, 27, 19, 21],
+                borderColor: '#FF33A8',
+                backgroundColor: 'rgba(255, 51, 168, 0.2)',
+                fill: true,
+                tension: 0.4
+            },
+            {
+                label: 'SO3',
+                data: [12, 15, 14, 16],
+                borderColor: '#FFC300',
+                backgroundColor: 'rgba(255, 195, 0, 0.2)',
+                fill: true,
+                tension: 0.4
+            },
+            {
+                label: 'O3',
+                data: [25, 27, 26, 28],
+                borderColor: '#33FFF5',
+                backgroundColor: 'rgba(51, 255, 245, 0.2)',
+                fill: true,
+                tension: 0.4
+            },
+            {
+                label: 'CO',
+                data: [30, 32, 31, 33],
+                borderColor: '#A833FF',
+                backgroundColor: 'rgba(168, 51, 255, 0.2)',
+                fill: true,
+                tension: 0.4
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+
+        // Pollutant comparison chart
+        const pollutantCtx = document.getElementById('pollutantChart').getContext('2d');
+        new Chart(pollutantCtx, {
+            type: 'bar',
+            data: {
+                labels: ['PM2.5', 'PM10', 'NO2', 'SO2', 'CO', 'O3'],
+                datasets: [{
+                    label: 'Current Levels',
+                    data: [30, 42, 24, 11, 24, 37],
+                    backgroundColor: 'rgba(37, 99, 235, 0.6)',
+                    borderColor: 'rgba(37, 99, 235, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Forecasted Levels',
+                    data: [45, 40, 25, 17, 18, 32],
+                    backgroundColor: 'rgba(16, 185, 129, 0.6)',
+                    borderColor: 'rgba(16, 185, 129, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Function to update forecasts
+        function updateForecasts() {
+            // Simulated API call to get forecast data
+            fetch('/api/forecast')
+                .then(response => response.json())
+                .then(data => {
+                    // Update the values
+                    document.getElementById('pm25-forecast').textContent = data.pm25;
+                    document.getElementById('pm10-forecast').textContent = data.pm10;
+                    document.getElementById('no2-forecast').textContent = data.no2;
+                })
+                .catch(error => console.error('Error fetching forecast:', error));
+        }
+
+        // Update forecasts periodically
+        setInterval(updateForecasts, 300000); // Update every 5 minutes
+    </script>
+</body>
+</html>

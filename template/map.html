@@ -1,0 +1,2263 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Air Quality Map</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #ff6f61;
+            --background-light: #f5f7fa;
+            --text-dark: #333;
+            --text-light: #666;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+            --border-radius: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background-color: var(--background-light);
+            height: 100%;
+            width: 100%;
+            overflow-x: hidden;
+        }
+
+        html {
+            height: 100%;
+            width: 100%;
+        }
+
+        /* Header Bar */
+        .status-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 0.75rem;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .status-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .app-title {
+            font-weight: 600;
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+        }
+
+        .current-aqi {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            white-space: nowrap;
+        }
+
+        .current-aqi-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .aqi-classes {
+            display: flex;
+            gap: 0.75rem;
+            overflow-x: auto;
+            padding: 0.5rem 0;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-color) transparent;
+            -webkit-overflow-scrolling: touch;
+            flex-wrap: nowrap;
+            width: 100%;
+        }
+
+        .aqi-classes::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .aqi-classes::-webkit-scrollbar-thumb {
+            background-color: var(--primary-color);
+            border-radius: 4px;
+        }
+
+        .aqi-class {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: white;
+            white-space: nowrap;
+            transition: var(--transition);
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            flex-shrink: 0;
+        }
+
+        .aqi-class:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        /* Main Container */
+        .container-fluid {
+            display: flex;
+            min-height: 100vh;
+            height: 100%;
+            width: 100%;
+            padding: 0;
+            margin: 0;
+        }
+
+        .page-container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+            padding-top: 60px; /* Adjust based on status bar height */
+            position: relative;
+        }
+
+        .map-section {
+            flex: 1;
+            height: 100%;
+            min-height: 400px;
+            width: 100%;
+            position: relative;
+            transition: width 0.3s ease;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+            z-index: 1;
+        }
+
+        /* Controls for Map */
+        .map-controls {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            z-index: 400;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .map-control-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            background: white;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--text-dark);
+            box-shadow: var(--shadow);
+        }
+
+        .map-control-btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .map-control-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .map-control-btn.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .map-control-btn.disabled:hover {
+            background: white;
+            color: var(--text-dark);
+        }
+
+        /* Toggle Panel Button */
+        .toggle-panel-btn {
+            position: absolute;
+            left: -15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 50px;
+            background: white;
+            border-radius: 4px 0 0 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 500;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+            border: none;
+            color: var(--primary-color);
+            display: none;
+        }
+
+        /* Details Panel */
+        .aqi-details {
+            width: 400px;
+            max-width: 100%;
+            height: 100%;
+            padding: 1.5rem;
+            background: white;
+            box-shadow: var(--shadow);
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            position: relative;
+            z-index: 5;
+        }
+
+        .aqi-details.collapsed {
+            transform: translateX(100%);
+            position: absolute;
+            right: 0;
+            top: 60px;
+        }
+
+        .aqi-index {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 1.5rem;
+        }
+
+        .aqi-index span {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .aqi-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            text-align: center;
+            transition: var(--transition);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            cursor: pointer;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow);
+        }
+
+        .stat-card i {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--text-dark);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-top: 0.25rem;
+        }
+
+        .stat-trend {
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+        }
+
+        .trend-up {
+            color: #e53e3e;
+        }
+
+        .trend-down {
+            color: #38a169;
+        }
+
+        .trend-stable {
+            color: #718096;
+        }
+
+        /* Health Recommendations Section */
+        .health-tips {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-top: 1.5rem;
+        }
+
+        .tips-title {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tip-item {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .tip-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .tip-icon {
+            color: var(--primary-color);
+            font-size: 1.1rem;
+            margin-top: 0.2rem;
+        }
+
+        .tip-content {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+
+        .timestamp {
+            text-align: center;
+            color: var(--text-light);
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        /* Forecast section */
+        .forecast-section {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+            margin-top: 1.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .forecast-section:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+
+        .forecast-title {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--primary-color);
+        }
+
+        .forecast-chart-container {
+            height: 240px;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .parameter-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .parameter-btn {
+            padding: 0.4rem 0.75rem;
+            background: #f0f4f8;
+            border: none;
+            border-radius: 0.5rem;
+            color: var(--text-dark);
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .parameter-btn:hover {
+            background: #e1e8f0;
+            transform: translateY(-2px);
+        }
+
+        .parameter-btn.active {
+            background: var(--primary-color);
+            color: white;
+            box-shadow: 0 2px 4px rgba(67, 97, 238, 0.3);
+        }
+
+        /* Notification styles */
+        .notification {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: white;
+            padding: 12px 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            max-width: 90%;
+            width: 400px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .notification.show {
+            opacity: 1;
+        }
+
+        .notification-error {
+            border-left: 4px solid #e53e3e;
+        }
+
+        .notification-warning {
+            border-left: 4px solid #f6ad55;
+        }
+
+        .notification-info {
+            border-left: 4px solid var(--primary-color);
+        }
+
+        /* Login and OTP modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            max-width: 90%;
+            width: 400px;
+            box-shadow: var(--shadow);
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+        }
+
+        .modal-text {
+            margin-bottom: 1.5rem;
+            color: var(--text-light);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+
+        .modal-form {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            font-weight: 500;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: #3a56e4;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: var(--text-dark);
+            border: none;
+        }
+
+        .btn-secondary:hover {
+            background-color: #cbd5e0;
+        }
+
+        /* Coverage circle style */
+        .coverage-circle {
+            stroke-dasharray: 5, 5;
+            animation: dash 20s linear infinite;
+        }
+
+        @keyframes dash {
+            to {
+                stroke-dashoffset: 1000;
+            }
+        }
+
+        /* User location marker styling */
+        .user-location-marker {
+            background: transparent;
+        }
+
+        .pulse {
+            display: block;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #4361ee;
+            border: 2px solid white;
+            cursor: pointer;
+            box-shadow: 0 0 0 rgba(67, 97, 238, 0.4);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(67, 97, 238, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(67, 97, 238, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(67, 97, 238, 0);
+            }
+        }
+
+        /* OTP verification styles */
+        .otp-inputs {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin: 1.5rem 0;
+        }
+
+        .otp-input {
+            width: 40px;
+            height: 40px;
+            text-align: center;
+            font-size: 1.25rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.375rem;
+        }
+
+        .welcome-user {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(67, 97, 238, 0.1);
+            border-radius: 2rem;
+            font-weight: 500;
+            color: var(--primary-color);
+            margin-left: auto;
+        }
+
+        /* Enhanced forecast styling */
+        .forecast-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .forecast-day {
+            flex: 1;
+            min-width: 80px;
+            text-align: center;
+            padding: 0.75rem 0.5rem;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin: 0.25rem;
+            transition: all 0.2s ease;
+        }
+
+        .forecast-day:hover {
+            background: #f0f4f8;
+            transform: translateY(-2px);
+        }
+
+        .forecast-date {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .forecast-icon {
+            font-size: 1.5rem;
+            margin: 0.5rem 0;
+            color: var(--primary-color);
+        }
+
+        .forecast-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .forecast-label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 1200px) {
+            .aqi-details {
+                width: 350px;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .page-container {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .map-section {
+                height: 50vh;
+                min-height: 400px;
+                width: 100%;
+            }
+
+            .aqi-details {
+                width: 100%;
+                height: auto;
+                max-height: 60vh;
+                overflow-y: auto;
+            }
+
+            .aqi-details.collapsed {
+                transform: translateY(100%);
+                top: auto;
+                bottom: 0;
+                right: 0;
+                left: 0;
+            }
+
+            .toggle-panel-btn {
+                top: auto;
+                bottom: 100%;
+                left: 50%;
+                transform: translateX(-50%) rotate(90deg);
+                border-radius: 4px 4px 0 0;
+                width: 50px;
+                height: 30px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .status-bar {
+                padding: 0.5rem;
+            }
+
+            .status-bar-left {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .aqi-classes {
+                width: 100%;
+                justify-content: flex-start;
+                padding: 0.5rem 0;
+            }
+
+            .page-container {
+                padding-top: 100px;
+            }
+
+            .aqi-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .map-section {
+                height: 45vh;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .status-bar-left {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .app-title {
+                margin-bottom: 0.5rem;
+            }
+
+            .current-aqi {
+                align-self: flex-start;
+            }
+
+            .welcome-user {
+                margin-left: 0;
+                margin-top: 0.5rem;
+            }
+
+            .page-container {
+                padding-top: 140px;
+            }
+
+            .aqi-index span {
+                font-size: 2.5rem;
+            }
+
+            .aqi-stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.75rem;
+            }
+
+            .forecast-section {
+                padding: 1rem;
+            }
+
+            .forecast-chart-container {
+                height: 200px;
+            }
+
+            .map-control-btn {
+                width: 36px;
+                height: 36px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .aqi-stats {
+                grid-template-columns: repeat(1, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="status-bar">
+        <div class="status-bar-left">
+            <div class="app-title">
+                <i class="fas fa-wind"></i>
+                Air Quality Monitor
+            </div>
+            <div class="current-aqi">
+                <i class="fas fa-wind"></i>
+                <span class="current-aqi-value" id="status-aqi">--</span>
+                <span id="status-text">Loading...</span>
+            </div>
+
+            {% if request.session.name %}
+            <div class="welcome-user">
+                <i class="fas fa-user-circle"></i>
+                <span>{{ request.session.name }}</span>
+            </div>
+            {% endif %}
+        </div>
+        <div class="aqi-classes">
+            <div class="aqi-class" style="background-color: #00e400">Good (0-50)</div>
+            <div class="aqi-class" style="background-color: #ffff00; color: black">Moderate (51-100)</div>
+            <div class="aqi-class" style="background-color: #ff7e00">Unhealthy (101-150)</div>
+            <div class="aqi-class" style="background-color: #ff0000">Severe (151-200)</div>
+            <div class="aqi-class" style="background-color: #8F3F97">Very Severe (201-300)</div>
+            <div class="aqi-class" style="background-color: #7E0023">Hazardous (301+)</div>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="page-container">
+            <div class="map-section">
+                <div id="map"></div>
+
+                <div class="map-controls">
+                    <button class="map-control-btn" title="Zoom in" id="zoom-in-btn">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                    <button class="map-control-btn" title="Zoom out" id="zoom-out-btn">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button class="map-control-btn{% if not request.session.otp_verified %} disabled{% endif %}"
+                            title="{% if request.session.otp_verified %}My location{% else %}OTP verification required{% endif %}"
+                            id="location-btn">
+                        <i class="fas fa-location-arrow"></i>
+                    </button>
+                    <button class="map-control-btn" title="Toggle sensor coverage" id="coverage-btn">
+                        <i class="fas fa-broadcast-tower"></i>
+                    </button>
+                    <button class="map-control-btn" title="Toggle details panel" id="panel-toggle-btn">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <a href="#forecastChart" class="map-control-btn" title="Forecast-details" id="dashboard-btn">
+    <i class="fas fa-chart-line"></i>
+</a>
+                </div>
+
+                <div class="notification" id="notification">
+                    <span id="notification-text"></span>
+                </div>
+            </div>
+
+            <button class="toggle-panel-btn" id="expand-panel-btn">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+
+            <div class="aqi-details" id="details-panel">
+               <div class="aqi-index">
+                    <span id="latest_aqi">{{ highest_sub_index }}</span>
+                    <div id="aqi-status">Air Quality Index</div>
+                </div>
+
+                <div class="aqi-stats">
+                    <div class="stat-card">
+                        <i class="fas fa-seedling"></i>
+                        <div class="stat-value" id="latest_pm25">--</div>
+                        <div class="stat-label">PM2.5</div>
+                        <div class="stat-trend trend-up"><i class="fas fa-arrow-up"></i> 3</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-smog"></i>
+                        <div class="stat-value" id="latest_pm10">--</div>
+                        <div class="stat-label">PM10</div>
+                        <div class="stat-trend trend-stable"><i class="fas fa-equals"></i> 6</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-industry"></i>
+                        <div class="stat-value" id="latest_so2">--</div>
+                        <div class="stat-label">SO2</div>
+                        <div class="stat-trend trend-down"><i class="fas fa-arrow-down"></i> 10</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-wind"></i>
+                        <div class="stat-value" id="latest_o3">--</div>
+                        <div class="stat-label">O3</div>
+                        <div class="stat-trend trend-up"><i class="fas fa-arrow-up"></i> 5%</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-car"></i>
+                        <div class="stat-value" id="latest_co">--</div>
+                        <div class="stat-label">CO</div>
+                        <div class="stat-trend trend-stable"><i class="fas fa-equals"></i> 0.002</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-cloud"></i>
+                        <div class="stat-value" id="latest_no2">--</div>
+                        <div class="stat-label">NO2</div>
+                        <div class="stat-trend trend-down"><i class="fas fa-arrow-down"></i> 47</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-flask"></i>
+                        <div class="stat-value" id="latest_nh3">--</div>
+                        <div class="stat-label">NH3</div>
+                        <div class="stat-trend trend-stable"><i class="fas fa-equals"></i> 56</div>
+                    </div>
+                </div>
+
+                <!-- Enhanced Forecast Section -->
+                <div class="forecast-section">
+                    <div class="forecast-title">
+                        <div><i class="fas fa-chart-line me-2"></i> Air Quality Forecast</div>
+                    </div>
+
+                    <div class="parameter-controls">
+                        <button class="parameter-btn active" data-param="pm25">
+                            <i class="fas fa-lungs"></i> PM2.5
+                        </button>
+                        <button class="parameter-btn" data-param="pm10">
+                            <i class="fas fa-dust"></i> PM10
+                        </button>
+                        <button class="parameter-btn" data-param="no2">
+                            <i class="fas fa-smog"></i> NO₂
+                        </button>
+                        <button class="parameter-btn" data-param="o3">
+                            <i class="fas fa-cloud"></i> O₃
+                        </button>
+                        <button class="parameter-btn" data-param="nh3">
+                            <i class="fas fa-smog"></i> NH3
+                        </button>
+                        <button class="parameter-btn" data-param="so2">
+                            <i class="fas fa-dust"></i> so2
+                        </button>
+
+
+                    </div>
+
+                    <div class="forecast-chart-container">
+                        <canvas id="forecastChart"></canvas>
+                    </div>
+
+                    <!-- Added visual forecast info -->
+                    <div class="forecast-info" id="forecast-info">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                </div>
+
+                <div class="health-tips">
+                    <div class="tips-title">
+                        <i class="fas fa-heartbeat"></i>
+                        Health Recommendations
+                    </div>
+
+                    <div class="tip-item">
+                        <div class="tip-icon">
+                            <i class="fas fa-running"></i>
+                        </div>
+                        <div class="tip-content">
+                            Outdoor activities are safe for most individuals.
+                        </div>
+                    </div>
+
+                    <div class="tip-item">
+                        <div class="tip-icon">
+                            <i class="fas fa-lungs"></i>
+                        </div>
+                        <div class="tip-content">
+                            People with respiratory issues should monitor their symptoms.
+                        </div>
+                    </div>
+
+                    <div class="tip-item">
+                        <div class="tip-icon">
+                            <i class="fas fa-home"></i>
+                        </div>
+                        <div class="tip-content">
+                            Ventilation is recommended; open windows during cooler hours.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timestamp">
+                    Last Updated: <span id="date">N/A</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal-overlay" id="login-modal">
+        <div class="modal-content">
+            <div class="modal-title">Phone Verification Required</div>
+            <div class="modal-text">To access your location data, you need to verify your phone number. This helps us provide you with the most accurate air quality information.</div>
+
+            <form class="modal-form" action="{% url 'send_otp' %}" method="POST">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="phone_number" class="form-label">Enter your phone number</label>
+                    <input type="tel" name="phone_number" id="phone_number" class="form-control" placeholder="+91XXXXXXXXXX" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-primary">Send OTP</button>
+                    <button type="button" id="close-login-modal-btn" class="btn btn-secondary">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- OTP Verification Modal -->
+    <div class="modal-overlay" id="otp-modal">
+        <div class="modal-content">
+            <div class="modal-title">Verify OTP</div>
+            <div class="modal-text">Enter the 6-digit code sent to your phone number.</div>
+
+            <form class="modal-form" action="{% url 'verify_otp' %}" method="POST">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="otp_code" class="form-label">Enter OTP</label>
+                    <input type="text" name="otp_code" id="otp_code" class="form-control" placeholder="XXXXXX" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-primary">Verify</button>
+                    <button type="button" id="close-otp-modal-btn" class="btn btn-secondary">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+// Create a namespace for the AQI Map application
+const AQIMap = {
+    // Map and layers
+    map: null,
+    coverageCircles: {},
+    markers: {},
+
+    // User authentication state
+    isOtpVerified: {{ request.session.otp_verified|default:"false"|lower }}, // Django template variable
+
+    // Location tracking properties
+    userLocationMarker: null,
+    userLocationCircle: null,
+    isTrackingLocation: false,
+    isCoverageVisible: false,
+    maxDistanceForData: 1000, // maximum distance in meters for getting sensor data
+
+    // UI state
+    isPanelCollapsed: false,
+
+    // Data storage
+    sensorLocations: {
+        'lora-v1': { lat: 10.17838574974258, lng: 76.43041507882373, name: 'Adi Shankara Institute of Engineering and Technology' },
+        'loradev2': { lat: 10.17095090340159, lng: 76.42962876824544, name: 'Mattoor Junction-Pothiyakkara Road, Mattoor' },
+        'location2': { lat: 10.172, lng: 76.432, name: 'Location 2' },
+        'location3': { lat: 10.175, lng: 76.435, name: 'Location 3' },
+        'location4': { lat: 10.169, lng: 76.440, name: 'Location 4' }
+    },
+    sensorData: {},
+    forecastData: null,
+    currentParameter: 'pm25',
+
+    // WHO limits for reference
+    WHO_LIMITS: {
+        "co": 4,
+        "so2": 40,
+        "pm25": 15,
+        "pm10": 45,
+        "no2": 28,
+        "o3": 64,
+        "nh3": 200
+    },
+
+    // Initialize the application
+    init: function() {
+        // Create map if not already initialized
+        if (!this.map) {
+            this.map = L.map('map').setView([10.184732819803031, 76.42155513804967], 10);
+
+            // Add base tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(this.map);
+
+            // Initialize markers for all locations
+            this.initializeMarkers();
+
+            // Add map control event handlers
+            this.addMapControls();
+
+            // Initialize the forecast chart
+            this.initForecastChart();
+
+            // Initialize modal handlers
+            this.initModalHandlers();
+
+            // Initialize responsive UI handlers
+            this.initResponsiveUI();
+        }
+
+        // Fetch initial data
+        this.fetchSensorData();
+
+        // Set up interval for data refresh
+        setInterval(() => this.fetchSensorData(), 10000); // Refresh every 30 seconds
+
+        // Handle window resize
+        window.addEventListener('resize', this.handleWindowResize.bind(this));
+
+        // Initial layout adjustment
+        this.handleWindowResize();
+    },
+
+    // Initialize responsive UI handlers
+    initResponsiveUI: function() {
+        // Toggle panel button
+        document.getElementById('panel-toggle-btn').addEventListener('click', () => {
+            this.toggleDetailsPanel();
+        });
+
+        // Expand panel button
+        document.getElementById('expand-panel-btn').addEventListener('click', () => {
+            this.toggleDetailsPanel();
+        });
+
+        // Set initial state
+        const detailsPanel = document.getElementById('details-panel');
+        const expandBtn = document.getElementById('expand-panel-btn');
+
+        // On small screens, start with panel collapsed
+        if (window.innerWidth < 768) {
+            detailsPanel.classList.add('collapsed');
+            expandBtn.style.display = 'block';
+            this.isPanelCollapsed = true;
+
+            // Update map size after panel collapse
+            setTimeout(() => {
+                this.map.invalidateSize();
+            }, 300);
+        }
+    },
+
+    // Handle window resize
+    handleWindowResize: function() {
+        const detailsPanel = document.getElementById('details-panel');
+        const expandBtn = document.getElementById('expand-panel-btn');
+
+        if (window.innerWidth < 768) {
+            expandBtn.style.display = 'block';
+
+            // If details panel is not already collapsed on narrow screens, collapse it
+            if (!this.isPanelCollapsed) {
+                detailsPanel.classList.add('collapsed');
+                this.isPanelCollapsed = true;
+            }
+        } else {
+            // On larger screens, always show the panel
+            expandBtn.style.display = 'none';
+            detailsPanel.classList.remove('collapsed');
+            this.isPanelCollapsed = false;
+        }
+
+        // Update map size
+        setTimeout(() => {
+            this.map.invalidateSize();
+        }, 100);
+    },
+
+    // Toggle details panel
+    toggleDetailsPanel: function() {
+        const detailsPanel = document.getElementById('details-panel');
+        const expandBtn = document.getElementById('expand-panel-btn');
+
+        if (this.isPanelCollapsed) {
+            // Expand panel
+            detailsPanel.classList.remove('collapsed');
+
+            // Update icon direction based on screen size
+            if (window.innerWidth >= 768) {
+                expandBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+            } else {
+                expandBtn.innerHTML = '<i class="fas fa-chevron-down"></i>';
+            }
+        } else {
+            // Collapse panel
+            detailsPanel.classList.add('collapsed');
+
+            // Update icon direction based on screen size
+            if (window.innerWidth >= 768) {
+                expandBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+            } else {
+                expandBtn.innerHTML = '<i class="fas fa-chevron-up"></i>';
+            }
+        }
+
+        this.isPanelCollapsed = !this.isPanelCollapsed;
+
+        // Update map size after animation completes
+        setTimeout(() => {
+            this.map.invalidateSize();
+        }, 300);
+    },
+
+    // Initialize markers for all sensor locations
+    initializeMarkers: function() {
+        // Create markers for all sensor locations
+        for (const [id, location] of Object.entries(this.sensorLocations)) {
+            const marker = L.marker([location.lat, location.lng]).addTo(this.map);
+
+            // Customize popup content
+            marker.bindPopup(`<strong>${location.name}</strong><br>Loading data...`);
+
+            // Add click handler
+            marker.on('click', () => {
+                this.handleMarkerClick(id);
+            });
+
+            // Store marker reference
+            this.markers[id] = marker;
+
+            // Create a coverage circle but don't add to map yet
+            const coverageCircle = L.circle([location.lat, location.lng], {
+                radius: this.maxDistanceForData,
+                color: '#4361ee',
+                fillColor: '#4361ee',
+                fillOpacity: 0.05,
+                weight: 1.5,
+                dashArray: '5, 5',
+                className: 'coverage-circle'
+            });
+
+            this.coverageCircles[id] = coverageCircle;
+        }
+    },
+
+    // Handle marker click
+    handleMarkerClick: function(locationId) {
+        // Center map on marker
+        const location = this.sensorLocations[locationId];
+        this.map.setView([location.lat, location.lng], 16);
+
+        // If panel is collapsed, expand it
+        if (this.isPanelCollapsed) {
+            this.toggleDetailsPanel();
+        }
+
+        // Update UI with this location's data
+        this.updateUIWithLocationData(locationId);
+
+        // Open popup with updated info
+        this.updateMarkerPopup(locationId);
+        this.markers[locationId].openPopup();
+    },
+
+    // Update marker popup with latest data
+    updateMarkerPopup: function(locationId) {
+        const locationData = this.sensorData[locationId];
+        const location = this.sensorLocations[locationId];
+
+        if (!locationData) {
+            this.markers[locationId].setPopupContent(`<strong>${location.name}</strong><br>No data available`);
+            return;
+        }
+
+        // Create popup content with sensor data
+        let content = `
+            <div style="min-width: 200px;">
+                <h3 style="margin: 0 0 8px 0;">${location.name}</h3>
+               <div style="font-size: 22px; font-weight: bold; color: ${this.getAQIColor(locationData.aqi)};">
+                   AQI: ${locationData.aqi}
+                </div>
+                <div style="font-size: 14px; margin-top: 5px;">
+                  ${this.getAQIStatus(locationData.aqi).text}
+                </div>
+                <hr style="margin: 10px 0;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div>PM2.5: ${locationData.pm25}</div>
+                    <div>PM10: ${locationData.pm10}</div>
+                    <div>SO₂: ${locationData.so2}</div>
+                    <div>O₃: ${locationData.o3}</div>
+                    <div>CO: ${locationData.co}</div>
+                    <div>NO₂: ${locationData.no2}</div>
+                    <div>NH₃: ${locationData.nh3}</div>
+                </div>
+                <hr style="margin: 10px 0;">
+                <button
+                    onclick="AQIMap.updateUIWithLocationData('${locationId}')"
+                    style="padding: 5px 10px; background: #4361ee; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%;"
+                >
+                    Show in Dashboard
+                </button>
+            </div>
+        `;
+
+        this.markers[locationId].setPopupContent(content);
+    },
+
+    // Fetch sensor data from the server
+    fetchSensorData: function() {
+        // Make AJAX request to get sensor data
+        $.ajax({
+            url: window.location.pathname,  // Current URL (map_view)
+            type: "GET",
+            dataType: "json",
+            headers: { "X-Requested-With": "XMLHttpRequest" },
+            success: (data) => {
+                // Update data for real sensors
+                if (data.lora_v1 && data.lora_v1.latest_item) {
+                    this.sensorData['lora-v1'] = {
+                        //aqi: data.lora_v1.highest_sub_index,
+                        pm25: parseFloat(data.lora_v1.latest_item.pm25 || 0),
+                        pm10: parseFloat(data.lora_v1.latest_item.pm10 || 0),
+                        so2: parseFloat(data.lora_v1.latest_item.so2 || 0),
+                        o3: parseFloat(data.lora_v1.latest_item.o3 || 0),
+                        co: parseFloat(data.lora_v1.latest_item.co || 0),
+                        no2: parseFloat(data.lora_v1.latest_item.no2 || 0),
+                        nh3: parseFloat(data.lora_v1.latest_item.nh3 || 0)
+                    };
+
+                    // Update marker popup
+                    this.updateMarkerPopup('lora-v1');
+                }
+
+                if (data.loradev2 && data.loradev2.latest_item) {
+                    this.sensorData['loradev2'] = {
+                        aqi: data.loradev2.highest_sub_index,
+                        pm25: parseFloat(data.loradev2.latest_item.pm25 || 0),
+                        pm10: parseFloat(data.loradev2.latest_item.pm10 || 0),
+                        so2: parseFloat(data.loradev2.latest_item.so2 || 0),
+                        o3: parseFloat(data.loradev2.latest_item.o3 || 0),
+                        co: parseFloat(data.loradev2.latest_item.co || 0),
+                        no2: parseFloat(data.loradev2.latest_item.no2 || 0),
+                        nh3: parseFloat(data.loradev2.latest_item.nh3 || 0)
+                    };
+
+                    // Update marker popup
+                    this.updateMarkerPopup('loradev2');
+                }
+
+                // Get forecast data if available
+                if (data.forecast_data) {
+                    this.forecastData = data.forecast_data;
+                    this.updateForecastChart();
+                    this.updateForecastVisuals();
+                }
+
+                // Generate simulated data for other locations if needed
+                this.generateSimulatedData();
+
+                // Update user location data if tracking is active
+                if (this.isTrackingLocation && this.userLocationMarker) {
+                    this.updateUserLocationData();
+                }
+
+                // Update the dashboard with default location data
+                if (Object.keys(this.sensorData).length > 0) {
+                    // Pick the first location with data
+                    const firstLocationId = Object.keys(this.sensorData)[0];
+                    this.updateUIWithLocationData(firstLocationId);
+                }
+            },
+            error: (xhr, status, error) => {
+                console.error("AJAX error:", error);
+                // Generate simulated data as fallback
+                this.generateSimulatedData();
+            }
+        });
+    },
+
+    // Generate simulated data for locations without real sensors
+    generateSimulatedData: function() {
+        // Use one of the real sensors as a baseline
+        let baseAQI = 50; // Default value
+        let baseData = null;
+
+        if (this.sensorData['lora-v1']) {
+            baseAQI = this.sensorData['lora-v1'].aqi;
+            baseData = this.sensorData['lora-v1'];
+        } else if (this.sensorData['loradev2']) {
+            baseAQI = this.sensorData['loradev2'].aqi;
+            baseData = this.sensorData['loradev2'];
+        }
+
+        // Generate simulated data with variations if we have at least one real reading
+        if (baseData) {
+            // Location 2: 10% higher AQI
+            this.sensorData['location2'] = this.generateSimulatedReading(baseData, 1.1);
+            this.updateMarkerPopup('location2');
+
+            // Location 3: 10% lower AQI
+            this.sensorData['location3'] = this.generateSimulatedReading(baseData, 0.9);
+            this.updateMarkerPopup('location3');
+
+            // Location 4: 5% higher AQI
+            this.sensorData['location4'] = this.generateSimulatedReading(baseData, 1.05);
+            this.updateMarkerPopup('location4');
+        } else {
+            // If no real data, use completely simulated values
+            this.sensorData['location2'] = this.generateDefaultReading(55);
+            this.updateMarkerPopup('location2');
+
+            this.sensorData['location3'] = this.generateDefaultReading(45);
+            this.updateMarkerPopup('location3');
+
+            this.sensorData['location4'] = this.generateDefaultReading(65);
+            this.updateMarkerPopup('location4');
+
+            // Also need placeholder data for real sensors
+            this.sensorData['lora-v1'] = this.generateDefaultReading(50);
+            this.updateMarkerPopup('lora-v1');
+
+            this.sensorData['loradev2'] = this.generateDefaultReading(60);
+            this.updateMarkerPopup('loradev2');
+        }
+    },
+
+    // Generate a simulated reading based on a base reading
+    generateSimulatedReading: function(baseReading, factor) {
+        const result = {};
+
+        // Scale all parameters by the factor
+        for (const [param, value] of Object.entries(baseReading)) {
+            if (typeof value === 'number') {
+                result[param] = Math.round(value * factor * 10) / 10; // Round to 1 decimal place
+            } else {
+                result[param] = value; // Pass through non-numeric values
+            }
+        }
+
+        return result;
+    },
+
+    // Generate a default reading with an AQI value
+    generateDefaultReading: function(aqi) {
+        const scalingFactor = aqi / 100;
+
+        return {
+            aqi: aqi,
+            pm25: Math.round(20 * scalingFactor * 10) / 10,
+            pm10: Math.round(35 * scalingFactor * 10) / 10,
+            so2: Math.round(7 * scalingFactor * 10) / 10,
+            o3: Math.round(40 * scalingFactor * 10) / 10,
+            co: Math.round(1.5 * scalingFactor * 10) / 10,
+            no2: Math.round(18 * scalingFactor * 10) / 10,
+            nh3: Math.round(15 * scalingFactor * 10) / 10
+        };
+    },
+
+    // Update UI with location data
+    updateUIWithLocationData: function(locationId) {
+        const locationData = this.sensorData[locationId];
+        if (!locationData) return;
+
+        // Get location name
+        const locationName = this.sensorLocations[locationId] ? this.sensorLocations[locationId].name : 'Unknown';
+
+        // Update AQI value and status
+        const status = this.getAQIStatus(locationData.aqi);
+
+        $('#latest_aqi').text(locationData.aqi).css('color', status.color);
+        $('#aqi-status').text(status.text + ' Air Quality');
+        $('#status-aqi').text(locationData.aqi);
+        $('#status-text').text(status.text);
+        $('.current-aqi').css('background-color', status.color + '20');
+        $('#status-aqi').css('color', status.color);
+
+        // Update pollutant values
+        $('#latest_pm25').text(locationData.pm25);
+        $('#latest_pm10').text(locationData.pm10);
+        $('#latest_so2').text(locationData.so2);
+        $('#latest_o3').text(locationData.o3);
+        $('#latest_co').text(locationData.co);
+        $('#latest_no2').text(locationData.no2);
+        $('#latest_nh3').text(locationData.nh3);
+
+        // Update timestamp with location name
+        $('#date').text(`${locationName} - ${new Date().toLocaleString()}`);
+
+        // Update health recommendations
+        this.updateHealthRecommendations(locationData.aqi);
+    },
+
+    // Get AQI status and color
+    getAQIStatus: function(value) {
+        if (value <= 50) return { text: 'Good', color: '#00e400' };
+        if (value <= 100) return { text: 'Moderate', color: '#ffb700' };
+        if (value <= 150) return { text: 'Unhealthy', color: '#ff7e00' };
+        if (value <= 200) return { text: 'Severe', color: '#ff0000' };
+        if (value <= 300) return { text: 'Very Severe', color: '#8F3F97' };
+        return { text: 'Hazardous', color: '#7E0023' };
+    },
+
+    // Get AQI color
+    getAQIColor: function(value) {
+        return this.getAQIStatus(value).color;
+    },
+
+    // Update health recommendations based on AQI
+    updateHealthRecommendations: function(aqiValue) {
+        const recommendations = $('.health-tips .tip-content');
+
+        if (aqiValue <= 50) {
+            $(recommendations[0]).text('Outdoor activities are safe for all individuals.');
+            $(recommendations[1]).text('Air quality is good, no special precautions needed.');
+            $(recommendations[2]).text('Enjoy outdoor activities and ventilate your home.');
+        } else if (aqiValue <= 100) {
+            $(recommendations[0]).text('Outdoor activities are safe for most individuals.');
+            $(recommendations[1]).text('Unusually sensitive people should consider limiting prolonged outdoor exertion.');
+            $(recommendations[2]).text('Open windows during cooler parts of the day for ventilation.');
+        } else if (aqiValue <= 150) {
+            $(recommendations[0]).text('Active children and adults should limit prolonged outdoor exertion.');
+            $(recommendations[1]).text('People with respiratory issues should avoid outdoor activities.');
+            $(recommendations[2]).text('Keep windows closed and use air purifiers if available.');
+        } else if (aqiValue <= 200) {
+            $(recommendations[0]).text('Everyone should avoid prolonged outdoor exertion.');
+            $(recommendations[1]).text('People with respiratory issues should remain indoors.');
+            $(recommendations[2]).text('Keep windows closed and use HEPA air purifiers indoors.');
+        } else {
+            $(recommendations[0]).text('Everyone should avoid all outdoor activities.');
+            $(recommendations[1]).text('Stay indoors and reduce physical exertion.');
+            $(recommendations[2]).text('Keep all windows closed and use air purifiers if available.');
+        }
+    },
+
+    // Initialize forecast chart
+    initForecastChart: function() {
+        const ctx = document.getElementById('forecastChart').getContext('2d');
+        this.chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Loading...',
+                    data: [],
+                    borderColor: '#4361ee',
+                    backgroundColor: 'rgba(67, 97, 238, 0.2)',
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.raw + ' μg/m³';
+                            }
+                        },
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                        padding: 10,
+                        cornerRadius: 4
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: {
+                            display: true,
+                            text: 'μg/m³'
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    }
+                },
+                elements: {
+                    point: {
+                        radius: 4,
+                        hoverRadius: 6
+                    },
+                    line: {
+                        borderWidth: 2
+                    }
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                }
+            }
+        });
+
+        // Add parameter button click handlers
+        document.querySelectorAll('.parameter-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                // Update active state
+                document.querySelectorAll('.parameter-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                button.classList.add('active');
+
+                // Update chart with new parameter
+                this.currentParameter = button.getAttribute('data-param');
+                this.updateForecastChart();
+                this.updateForecastVisuals();
+            });
+        });
+    },
+
+    // Update forecast chart with latest data
+    updateForecastChart: function() {
+        if (!this.forecastData || !this.chart) return;
+
+        const parameter = this.currentParameter;
+
+        // Get parameter display name
+        const paramNames = {
+            'pm25': 'PM2.5',
+            'pm10': 'PM10',
+            'no2': 'NO₂',
+            'o3': 'O₃',
+            'so2': 'SO₂',
+            'co': 'CO',
+            'nh3': 'NH₃'
+        };
+
+        // Get parameter color
+        const paramColors = {
+            'pm25': 'rgba(247, 37, 133, 1)',
+            'pm10': 'rgba(67, 97, 238, 1)',
+            'no2': 'rgba(76, 201, 240, 1)',
+            'o3': 'rgba(114, 9, 183, 1)',
+            'so2': 'rgba(249, 65, 68, 1)',
+            'co': 'rgba(67, 170, 139, 1)',
+            'nh3': 'rgba(58, 12, 163, 1)'
+        };
+
+        // Extract dates and values
+        const dates = this.forecastData.map(entry => entry.day);
+        const values = this.forecastData.map(entry => entry[`${parameter}_max`]);
+
+        // Add WHO limit reference line
+        const whoLimit = this.WHO_LIMITS[parameter];
+        const limits = Array(dates.length).fill(whoLimit);
+
+        // Update chart data
+        this.chart.data.labels = dates;
+        this.chart.data.datasets = [
+            {
+                label: paramNames[parameter],
+                data: values,
+                backgroundColor: paramColors[parameter].replace('1', '0.2'),
+                borderColor: paramColors[parameter],
+                borderWidth: 2,
+                tension: 0.3,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                fill: true
+            },
+            {
+                label: 'WHO Limit',
+                data: limits,
+                borderColor: 'rgba(128, 128, 128, 0.7)',
+                borderWidth: 2,
+                borderDash: [5, 5],
+                fill: false,
+                pointRadius: 0
+            }
+        ];
+
+        // Update chart
+        this.chart.update();
+    },
+
+    // Update visual forecast cards
+    updateForecastVisuals: function() {
+        if (!this.forecastData) return;
+
+        const parameter = this.currentParameter;
+        const forecastInfoContainer = document.getElementById('forecast-info');
+        forecastInfoContainer.innerHTML = ''; // Clear current content
+
+        // Get parameter display name and icon
+        const paramNames = {
+            'pm25': 'PM2.5',
+            'pm10': 'PM10',
+            'no2': 'NO₂',
+            'o3': 'O₃',
+            'so2': 'SO₂',
+            'co': 'CO',
+            'nh3': 'NH₃'
+        };
+
+        const paramIcons = {
+            'pm25': 'fa-lungs',
+            'pm10': 'fa-dust',
+            'no2': 'fa-smog',
+            'o3': 'fa-cloud',
+            'so2': 'fa-industry',
+            'co': 'fa-car',
+            'nh3': 'fa-flask'
+        };
+
+        // Only show 5 days max
+        const daysToShow = Math.min(this.forecastData.length, 5);
+
+        // Create forecast cards
+        for (let i = 0; i < daysToShow; i++) {
+            const dayData = this.forecastData[i];
+            const value = dayData[`${parameter}_max`];
+            const dayName = new Date(dayData.day).toLocaleDateString('en-US', { weekday: 'short' });
+
+            // Get color based on value and WHO limit
+            const whoLimit = this.WHO_LIMITS[parameter];
+            let colorClass = 'text-success';
+
+            if (value > whoLimit * 1.5) {
+                colorClass = 'text-danger';
+            } else if (value > whoLimit) {
+                colorClass = 'text-warning';
+            }
+
+            // Create forecast day card
+            const dayCard = document.createElement('div');
+            dayCard.className = 'forecast-day';
+            dayCard.innerHTML = `
+                <div class="forecast-date">${dayName}</div>
+                <div class="forecast-icon">
+                    <i class="fas ${paramIcons[parameter]}"></i>
+                </div>
+                <div class="forecast-value ${colorClass}">${value}</div>
+                <div class="forecast-label">${paramNames[parameter]}</div>
+            `;
+
+            forecastInfoContainer.appendChild(dayCard);
+        }
+    },
+
+    // User location tracking methods
+    startLocationTracking: function() {
+        // Check if OTP is verified
+        if (!this.isOtpVerified) {
+            this.showLoginModal();
+            return;
+        }
+
+        // Check if geolocation is supported
+        if (!navigator.geolocation) {
+            this.showNotification("Geolocation is not supported by your browser", "error");
+            return;
+        }
+
+        // Toggle tracking state
+        this.isTrackingLocation = !this.isTrackingLocation;
+
+        // Update tracking button appearance
+        const trackingButton = document.getElementById('location-btn');
+        if (trackingButton) {
+            if (this.isTrackingLocation) {
+                trackingButton.classList.add('active');
+            } else {
+                trackingButton.classList.remove('active');
+            }
+        }
+
+        if (this.isTrackingLocation) {
+            // Start tracking
+            this.trackUserLocation();
+        } else {
+            // Stop tracking and remove markers
+            if (this.userLocationMarker) {
+                this.map.removeLayer(this.userLocationMarker);
+                this.userLocationMarker = null;
+            }
+            if (this.userLocationCircle) {
+                this.map.removeLayer(this.userLocationCircle);
+                this.userLocationCircle = null;
+            }
+        }
+    },
+
+    trackUserLocation: function() {
+        // Don't continue if tracking has been disabled
+        if (!this.isTrackingLocation) return;
+
+        const self = this;
+
+        // Options for the geolocation API
+        const options = {
+            enableHighAccuracy: true,
+            timeout: 5000,
+            maximumAge: 0
+        };
+
+
+        // Get current position
+        navigator.geolocation.getCurrentPosition(
+            // Success callback
+            position => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                const accuracy = position.coords.accuracy; // Accuracy in meters
+
+                // Create a LatLng object for the user's location
+                const userLatLng = L.latLng(lat, lng);
+
+                // If we don't have a marker yet, create one
+                if (!self.userLocationMarker) {
+                    // Create a marker with a popup
+                    self.userLocationMarker = L.marker(userLatLng, {
+                        icon: L.divIcon({
+                            className: 'user-location-marker',
+                            html: '<div class="pulse"></div>',
+                            iconSize: [16, 16],
+                            iconAnchor: [8, 8]
+                        })
+                    }).addTo(self.map);
+
+                    // Add popup to the marker
+                    self.userLocationMarker.bindPopup('Your location');
+
+                    // Create accuracy circle
+                    self.userLocationCircle = L.circle(userLatLng, {
+                        radius: accuracy / 2,
+                        color: '#4361ee',
+                        fillColor: '#4361ee',
+                        fillOpacity: 0.15,
+                        weight: 1
+                    }).addTo(self.map);
+
+                    // Center the map on the user's location
+                    self.map.setView(userLatLng, 16);
+
+                    // Update user location data
+                    self.updateUserLocationData();
+                } else {
+                    // Update existing marker and circle positions
+                    self.userLocationMarker.setLatLng(userLatLng);
+                    self.userLocationCircle.setLatLng(userLatLng);
+                    self.userLocationCircle.setRadius(accuracy / 2);
+
+                    // Update user location data
+                    self.updateUserLocationData();
+                }
+
+                // Schedule next update
+                setTimeout(() => {
+                    self.trackUserLocation();
+                }, 70000); // Update every 5 seconds
+            },
+            // Error callback
+            error => {
+                console.error('Error getting location:', error.message);
+
+                // Stop tracking if there's an error
+                self.isTrackingLocation = false;
+
+                // Update tracking button appearance
+                const trackingButton = document.getElementById('location-btn');
+                if (trackingButton) {
+                    trackingButton.classList.remove('active');
+                }
+
+                // Notify user
+                self.showNotification(`Error getting your location: ${error.message}`, "error");
+            },
+            options
+        );
+    },
+
+    // Update user location data
+    updateUserLocationData: function() {
+        if (!this.userLocationMarker) return;
+
+        const userLat = this.userLocationMarker.getLatLng().lat;
+        const userLng = this.userLocationMarker.getLatLng().lng;
+
+        // Find the nearest sensor and its distance
+        const nearestSensor = this.findNearestSensor(userLat, userLng);
+
+        if (!nearestSensor) {
+            this.userLocationMarker.setPopupContent(`
+                <div style="text-align: center; min-width: 200px;">
+                    <strong>Your Location</strong>
+                    <hr>
+                    <div>No sensor data available</div>
+                </div>
+            `);
+            return;
+        }
+
+        // Check if user is within range
+        if (nearestSensor.distance > this.maxDistanceForData / 1000) { // Convert meters to km
+            this.userLocationMarker.setPopupContent(`
+                <div style="text-align: center; min-width: 200px;">
+                    <strong>Your Location</strong>
+                    <hr>
+                    <div style="color: #e53e3e;">
+                        <i class="fas fa-exclamation-circle"></i> You are too far from the nearest sensor.
+                    </div>
+                    <div style="font-size: 12px; margin-top: 5px;">
+                        Nearest sensor: ${nearestSensor.name} (${nearestSensor.distance.toFixed(2)} km)
+                    </div>
+                    <div style="font-size: 12px; margin-top: 5px;">
+                        Data is only available within ${this.maxDistanceForData} meters of a sensor.
+                    </div>
+                </div>
+            `);
+            return;
+        }
+
+        // Get data from the nearest sensor
+        const sensorData = this.sensorData[nearestSensor.id];
+        if (!sensorData) {
+            this.userLocationMarker.setPopupContent(`
+                <div style="text-align: center; min-width: 200px;">
+                    <strong>Your Location</strong>
+                    <hr>
+                    <div>No data available from the nearest sensor</div>
+                </div>
+            `);
+            return;
+        }
+
+        // Calculate distance factor (1.0 at the sensor, decreasing with distance)
+        const distanceFactor = Math.max(0, 1 - (nearestSensor.distance * 1000) / this.maxDistanceForData);
+
+        // Create location data with slight random variation based on distance
+        const locationData = {};
+        for (const [param, value] of Object.entries(sensorData)) {
+            if (typeof value === 'number') {
+                // Add random variation increasing with distance
+                const variation = (1 - distanceFactor) * 0.1; // Up to 10% variation at max distance
+                const randomFactor = 1 + (Math.random() * 2 - 1) * variation;
+                locationData[param] = Math.round(value * randomFactor * 10) / 10;
+            } else {
+                locationData[param] = value;
+            }
+        }
+
+        // Get AQI status
+        const status = this.getAQIStatus(locationData.aqi);
+
+        // Update marker popup
+        this.userLocationMarker.setPopupContent(`
+            <div style="text-align: center; min-width: 200px;">
+                <strong>Your Location</strong>
+                <div style="font-size: 22px; font-weight: bold; color: ${status.color}; margin-top: 5px;">
+                    AQI: ${locationData.aqi}
+                </div>
+                <div style="font-size: 14px; margin-top: 2px;">
+                    ${status.text}
+                </div>
+                <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                    Nearest sensor: ${nearestSensor.name} (${nearestSensor.distance.toFixed(2)} km)
+                </div>
+                <hr style="margin: 8px 0;">
+                <div style="font-size: 12px; text-align: left;">
+                    <div>PM2.5: ${locationData.pm25}</div>
+                    <div>PM10: ${locationData.pm10}</div>
+                    <div>SO₂: ${locationData.so2}</div>
+                    <div>O₃: ${locationData.o3}</div>
+                </div>
+                <button
+                    onclick="AQIMap.updateUIWithUserLocationData()"
+                    style="padding: 5px; margin-top: 8px; background: #4361ee; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%;"
+                >
+                    Show in Dashboard
+                </button>
+            </div>
+        `);
+
+        // Store user location data
+        this.userLocationData = {
+            ...locationData,
+            name: "Your Location"
+        };
+
+        // Refresh the popup if it's open
+        if (this.map.hasLayer(this.userLocationMarker._popup)) {
+            this.userLocationMarker._popup.update();
+        }
+    },
+
+    // Update dashboard with user location data
+    updateUIWithUserLocationData: function() {
+        if (!this.userLocationData) return;
+
+        // Update AQI value and status
+        const status = this.getAQIStatus(this.userLocationData.aqi);
+
+        $('#latest_aqi').text(this.userLocationData.aqi).css('color', status.color);
+        $('#aqi-status').text(status.text + ' Air Quality');
+        $('#status-aqi').text(this.userLocationData.aqi);
+        $('#status-text').text(status.text);
+        $('.current-aqi').css('background-color', status.color + '20');
+        $('#status-aqi').css('color', status.color);
+
+        // Update pollutant values
+        $('#latest_pm25').text(this.userLocationData.pm25);
+        $('#latest_pm10').text(this.userLocationData.pm10);
+        $('#latest_so2').text(this.userLocationData.so2);
+        $('#latest_o3').text(this.userLocationData.o3);
+        $('#latest_co').text(this.userLocationData.co);
+        $('#latest_no2').text(this.userLocationData.no2);
+        $('#latest_nh3').text(this.userLocationData.nh3);
+
+        // Update timestamp
+        $('#date').text(`Your Location - ${new Date().toLocaleString()}`);
+
+        // Update health recommendations
+        this.updateHealthRecommendations(this.userLocationData.aqi);
+
+        // If panel is collapsed, expand it to show the data
+        if (this.isPanelCollapsed) {
+            this.toggleDetailsPanel();
+        }
+    },
+
+    // Find the nearest sensor to the given coordinates
+    findNearestSensor: function(lat, lng) {
+        let nearestSensor = null;
+        let minDistance = Infinity;
+
+        for (const [id, location] of Object.entries(this.sensorLocations)) {
+            // Skip if no data for this sensor
+            if (!this.sensorData[id]) continue;
+
+            // Calculate distance using Haversine formula
+            const R = 6371; // Earth's radius in km
+            const dLat = (location.lat - lat) * Math.PI / 180;
+            const dLng = (location.lng - lng) * Math.PI / 180;
+            const a =
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat * Math.PI / 180) * Math.cos(location.lat * Math.PI / 180) *
+                Math.sin(dLng/2) * Math.sin(dLng/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const distance = R * c;
+
+            if (distance < minDistance) {
+                nearestSensor = {
+                    id: id,
+                    name: location.name,
+                    distance: distance
+                };
+                minDistance = distance;
+            }
+        }
+
+        return nearestSensor;
+    },
+
+    // Toggle sensor coverage visibility
+    toggleCoverage: function() {
+        this.isCoverageVisible = !this.isCoverageVisible;
+
+        // Update button appearance
+        const coverageBtn = document.getElementById('coverage-btn');
+        if (coverageBtn) {
+            if (this.isCoverageVisible) {
+                coverageBtn.classList.add('active');
+            } else {
+                coverageBtn.classList.remove('active');
+            }
+        }
+
+        // Show or hide the coverage circles
+        for (const [id, circle] of Object.entries(this.coverageCircles)) {
+            if (this.isCoverageVisible) {
+                circle.addTo(this.map);
+            } else {
+                circle.remove();
+            }
+        }
+    },
+
+    // Show phone login modal
+    showLoginModal: function() {
+        document.getElementById('login-modal').style.display = 'flex';
+    },
+
+    // Hide phone login modal
+    hideLoginModal: function() {
+        document.getElementById('login-modal').style.display = 'none';
+    },
+
+    // Show OTP verification modal
+    showOtpModal: function() {
+        document.getElementById('otp-modal').style.display = 'flex';
+    },
+
+    // Hide OTP verification modal
+    hideOtpModal: function() {
+        document.getElementById('otp-modal').style.display = 'none';
+    },
+
+    // Initialize modal handlers
+    initModalHandlers: function() {
+        // Login modal close button
+        document.getElementById('close-login-modal-btn').addEventListener('click', () => {
+            this.hideLoginModal();
+        });
+
+        // OTP modal close button
+        document.getElementById('close-otp-modal-btn').addEventListener('click', () => {
+            this.hideOtpModal();
+        });
+
+        // Check if we need to show OTP verification after phone submission
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('verify_otp') === 'true') {
+            this.showOtpModal();
+        }
+    },
+
+    // Show a notification
+    showNotification: function(message, type = "info") {
+        const notification = document.getElementById('notification');
+        const notificationText = document.getElementById('notification-text');
+
+        // Set message and type
+        notificationText.textContent = message;
+        notification.className = 'notification notification-' + type;
+
+        // Show notification
+        notification.classList.add('show');
+
+        // Hide after 5 seconds
+        setTimeout(() => {
+            notification.classList.remove('show');
+        }, 5000);
+    },
+
+    // Add map controls
+    addMapControls: function() {
+        // Zoom in button
+        document.getElementById('zoom-in-btn').addEventListener('click', () => {
+            this.map.zoomIn();
+        });
+
+        // Zoom out button
+        document.getElementById('zoom-out-btn').addEventListener('click', () => {
+            this.map.zoomOut();
+        });
+
+        // Location button
+        const locationBtn = document.getElementById('location-btn');
+        if (locationBtn) {
+            locationBtn.addEventListener('click', () => {
+                if (!this.isOtpVerified) {
+                    this.showLoginModal();
+                } else {
+                    this.startLocationTracking();
+                }
+            });
+        }
+
+        // Coverage button
+        const coverageBtn = document.getElementById('coverage-btn');
+        if (coverageBtn) {
+            coverageBtn.addEventListener('click', () => {
+                this.toggleCoverage();
+            });
+        }
+    }
+}; // End of AQIMap object
+
+// Initialize the application when the document is ready
+$(document).ready(function() {
+    try {
+        AQIMap.init();
+    } catch (error) {
+        console.error("Error initializing AQI Map:", error);
+    }
+});
+    </script>
+<script>
+    // Add this function to your AQIMap object
+interpolateUserLocationData: function() {
+    if (!this.userLocationMarker) return;
+
+    const userLat = this.userLocationMarker.getLatLng().lat;
+    const userLng = this.userLocationMarker.getLatLng().lng;
+
+    // Collect data from all sensors
+    const coordinates = [];
+    const values = {};
+
+    // Initialize arrays for each parameter
+    const parameters = ['pm25', 'pm10', 'so2', 'o3', 'co', 'no2', 'nh3', 'aqi'];
+    parameters.forEach(param => {
+        values[param] = [];
+    });
+
+    // Collect data from all sensors
+    for (const [id, location] of Object.entries(this.sensorLocations)) {
+        if (!this.sensorData[id]) continue;
+
+        coordinates.push([location.lng, location.lat]); // Note: kriging typically uses [x,y] format
+
+        // Collect values for each parameter
+        parameters.forEach(param => {
+            values[param].push(this.sensorData[id][param]);
+        });
+    }
+
+    // If we don't have enough data points, fall back to nearest sensor
+    if (coordinates.length < 3) {
+        return this.updateUserLocationData(); // Use current method as fallback
+    }
+
+    // Interpolate values for each parameter
+    const interpolatedData = {};
+    parameters.forEach(param => {
+        // Create variogram model
+        const variogram = kriging.train(
+            values[param],
+            coordinates,
+            'exponential', // variogram model type
+            0, // nugget
+            100, // range
+            0.5 // sill
+        );
+
+        // Predict value at user location
+        interpolatedData[param] = kriging.predict(userLng, userLat, variogram);
+    });
+
+    // Update user location data with interpolated values
+    this.userLocationData = {
+        ...interpolatedData,
+        name: "Your Location (Interpolated)"
+    };
+
+    // Update UI and popup with interpolated data
+    this.updateUIWithUserLocationData();
+}
+</script>
+</body>
+</html>

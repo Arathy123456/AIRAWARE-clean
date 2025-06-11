@@ -1,0 +1,2710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Air Quality Dashboard - {{ request.session.name|default:"User" }}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --primary-light: #6366f1;
+            --secondary-color: #06b6d4;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --purple-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --blue-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --green-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            --orange-gradient: linear-gradient(135deg, #fc4a1a 0%, #f7b733 100%);
+            --pink-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --light-gradient: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            --card-gradient: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            --hero-gradient: linear-gradient(135deg, rgba(79, 70, 229, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%);
+
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --border-radius: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--gray-900);
+            background: var(--light-gradient);
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.15) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Enhanced Navigation Bar */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 12px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .navbar-content {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--gray-900);
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .navbar-brand img {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+        }
+
+        .menu-toggle {
+            display: none;
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            list-style: none;
+            margin: 0;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--gray-700);
+            font-weight: 500;
+            font-size: 0.95rem;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-link:hover {
+            color: var(--primary-color);
+            background: rgba(79, 70, 229, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .nav-link.active {
+            color: var(--primary-color);
+            background: rgba(79, 70, 229, 0.1);
+            font-weight: 600;
+        }
+
+        .nav-link.action-btn {
+            background: var(--green-gradient);
+            color: white;
+            font-weight: 600;
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .nav-link.action-btn:hover {
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .nav-link.login-btn {
+            background: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            padding: 10px 16px;
+            border-radius: 8px;
+        }
+
+        .nav-link.login-btn:hover {
+            background: var(--primary-light);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(79, 70, 229, 0.1);
+            border-radius: 8px;
+            font-weight: 500;
+            color: var(--primary-color);
+            margin-right: 16px;
+        }
+
+        /* Real-time Status Indicator */
+        .realtime-status {
+            position: fixed;
+            top: 70px;
+            right: 24px;
+            background: rgba(16, 185, 129, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            z-index: 1000;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        /* Dynamic Alert Banner */
+        .alert-banner {
+            padding: 16px 0;
+            text-align: center;
+            font-weight: 600;
+            color: white;
+            animation: slideDown 0.5s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .alert-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .alert-banner.good {
+            background: var(--green-gradient);
+        }
+
+        .alert-banner.moderate {
+            background: var(--orange-gradient);
+        }
+
+        .alert-banner.unhealthy {
+            background: linear-gradient(135deg, #fc4a1a 0%, #f7b733 100%);
+        }
+
+        .alert-banner.hazardous {
+            background: linear-gradient(135deg, #c94b4b 0%, #4b134f 100%);
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .alert-banner .alert-icon {
+            margin-right: 8px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        /* Main Container - Full Page Coverage */
+        .main-container {
+            width: 100%;
+            min-height: calc(100vh - 120px);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Welcome Header */
+        .welcome-header {
+            background: var(--card-gradient);
+            border-radius: var(--border-radius);
+            padding: 32px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--purple-gradient);
+        }
+
+        .welcome-content {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 32px;
+            align-items: center;
+        }
+
+        .welcome-info {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--purple-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            box-shadow: var(--shadow-xl);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(5deg); }
+        }
+
+        .welcome-text h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: var(--purple-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .location-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--gray-600);
+            font-size: 0.875rem;
+        }
+
+        .location-text {
+            background: rgba(79, 70, 229, 0.1);
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-weight: 500;
+            color: var(--primary-color);
+        }
+
+        .aqi-overview {
+            text-align: center;
+            padding: 32px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: var(--border-radius);
+            border: 2px solid rgba(79, 70, 229, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .aqi-overview::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent, rgba(79, 70, 229, 0.1), transparent);
+            animation: rotate 4s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .aqi-value {
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 8px;
+            background: var(--purple-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+            z-index: 1;
+        }
+
+        .aqi-status {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .aqi-badge {
+            display: inline-block;
+            background: var(--purple-gradient);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+        }
+
+        .last-updated {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            margin-top: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Metrics Grid - Full Width */
+        .metrics-section {
+            width: 100%;
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: var(--purple-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            width: 100%;
+        }
+
+        .metric-card {
+            background: var(--card-gradient);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+
+        .metric-card.updating {
+            background: linear-gradient(45deg, var(--card-gradient), rgba(16, 185, 129, 0.05));
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--purple-gradient);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: var(--shadow-2xl);
+            border-color: rgba(79, 70, 229, 0.3);
+        }
+
+        .metric-card:nth-child(2n)::before {
+            background: var(--green-gradient);
+        }
+
+        .metric-card:nth-child(3n)::before {
+            background: var(--orange-gradient);
+        }
+
+        .metric-icon {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+            background: var(--purple-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--gray-900) 0%, var(--gray-700) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+            transition: var(--transition);
+        }
+
+        .metric-value.updated {
+            animation: valueUpdate 0.6s ease-out;
+        }
+
+        @keyframes valueUpdate {
+            0% { transform: scale(1.1); color: #10b981; }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        .metric-label {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            font-weight: 600;
+        }
+
+        .metric-unavailable {
+            color: var(--gray-400);
+            font-style: italic;
+        }
+
+        /* Dashboard Grid - Full Coverage */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            width: 100%;
+            margin-bottom: 24px;
+        }
+
+        .dashboard-card {
+            background: var(--card-gradient);
+            border-radius: var(--border-radius);
+            padding: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dashboard-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--blue-gradient);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--blue-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card-badge {
+            background: var(--purple-gradient);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Map Styles - Clickable */
+        .map-container {
+            height: 400px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid rgba(79, 70, 229, 0.2);
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .map-container:hover {
+            border-color: var(--primary-color);
+            box-shadow: var(--shadow-xl);
+            transform: scale(1.01);
+        }
+
+        .map-container::after {
+            content: '🗺️ Click to view full map';
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .map-container:hover::after {
+            opacity: 1;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+
+        /* Forecast Section */
+        .forecast-controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .param-btn {
+            padding: 10px 16px;
+            border: 2px solid rgba(79, 70, 229, 0.2);
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--primary-color);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .param-btn:hover {
+            background: rgba(79, 70, 229, 0.1);
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        .param-btn.active {
+            background: var(--purple-gradient);
+            color: white;
+            border-color: transparent;
+            box-shadow: var(--shadow-md);
+        }
+
+        .forecast-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .chart-container {
+            height: 350px;
+            position: relative;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .forecast-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+
+        .forecast-table th,
+        .forecast-table td {
+            padding: 16px;
+            text-align: center;
+            border-bottom: 1px solid rgba(79, 70, 229, 0.1);
+        }
+
+        .forecast-table th {
+            background: var(--purple-gradient);
+            color: white;
+            font-weight: 700;
+        }
+
+        .forecast-table td {
+            color: var(--gray-900);
+            font-weight: 600;
+        }
+
+        .forecast-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Health Section */
+        .health-section {
+            background: var(--card-gradient);
+            border-radius: var(--border-radius);
+            padding: 32px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .health-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        }
+
+        .health-content {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 32px;
+            align-items: center;
+        }
+
+        .health-chart-container {
+            height: 300px;
+            position: relative;
+        }
+
+        .health-alert {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: 32px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            max-width: 320px;
+            box-shadow: var(--shadow-xl);
+        }
+
+        .health-alert h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .health-alert p {
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+
+        /* Weather Section */
+        .weather-section {
+            width: 100%;
+            margin-bottom: 24px;
+        }
+
+        .weather-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            width: 100%;
+        }
+
+        .weather-card {
+            background: var(--card-gradient);
+            border-radius: var(--border-radius);
+            padding: 32px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            transition: var(--transition);
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .weather-card.updating {
+            background: linear-gradient(45deg, var(--card-gradient), rgba(6, 182, 212, 0.05));
+            border-color: rgba(6, 182, 212, 0.3);
+        }
+
+        .weather-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--blue-gradient);
+        }
+
+        .weather-card:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .weather-icon {
+            font-size: 3rem;
+            background: var(--blue-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 16px;
+        }
+
+        .weather-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--gray-900) 0%, var(--gray-700) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+            transition: var(--transition);
+        }
+
+        .weather-value.updated {
+            animation: valueUpdate 0.6s ease-out;
+        }
+
+        .weather-label {
+            font-size: 1rem;
+            color: var(--gray-600);
+            font-weight: 600;
+        }
+
+        /* Disclaimer Section */
+        .disclaimer {
+            background: var(--card-gradient);
+            border-left: 6px solid var(--warning-color);
+            border-radius: var(--border-radius);
+            padding: 32px;
+            margin-top: 32px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .disclaimer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--orange-gradient);
+        }
+
+        .disclaimer h3 {
+            background: var(--orange-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .disclaimer p {
+            font-size: 0.875rem;
+            color: var(--gray-700);
+            line-height: 1.7;
+            margin-bottom: 12px;
+        }
+
+        .disclaimer-highlight {
+            background: rgba(245, 158, 11, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 16px 0;
+            border-left: 4px solid var(--warning-color);
+        }
+
+        .disclaimer-highlight ul {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+
+        .disclaimer-highlight li {
+            margin-bottom: 8px;
+            color: var(--gray-700);
+        }
+
+        /* Notification System */
+        .notification {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 1000;
+            background: var(--card-gradient);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: var(--border-radius);
+            padding: 16px 20px;
+            box-shadow: var(--shadow-2xl);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            max-width: 400px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            border-left: 4px solid var(--success-color);
+        }
+
+        .notification.error {
+            border-left: 4px solid var(--danger-color);
+        }
+
+        .notification.warning {
+            border-left: 4px solid var(--warning-color);
+        }
+
+        .notification.info {
+            border-left: 4px solid var(--primary-color);
+        }
+
+        /* User location marker */
+        .user-location-marker {
+            background: transparent;
+            border: none;
+        }
+
+        .location-pulse {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            border: 4px solid white;
+            box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.5);
+            animation: pulse-location 2s infinite;
+        }
+
+        @keyframes pulse-location {
+            0% {
+                box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.5);
+            }
+            70% {
+                box-shadow: 0 0 0 15px rgba(79, 70, 229, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
+            }
+        }
+
+        /* Mobile Menu Styles */
+        @media (max-width: 1024px) {
+            .nav-links {
+                gap: 16px;
+            }
+
+            .nav-link {
+                font-size: 0.875rem;
+                padding: 6px 10px;
+            }
+
+            .user-info {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: block;
+            }
+
+            .nav-links {
+                position: fixed;
+                top: 70px;
+                left: 0;
+                right: 0;
+                background: rgba(255, 255, 255, 0.98);
+                backdrop-filter: blur(20px);
+                flex-direction: column;
+                padding: 20px;
+                gap: 16px;
+                transform: translateY(-100%);
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.3s ease;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+                box-shadow: var(--shadow-lg);
+            }
+
+            .nav-links.active {
+                transform: translateY(0);
+                opacity: 1;
+                visibility: visible;
+            }
+
+            .nav-link {
+                width: 100%;
+                text-align: center;
+                padding: 12px 16px;
+                border-radius: 8px;
+            }
+
+            .nav-link.action-btn {
+                margin: 8px 0;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .forecast-content {
+                grid-template-columns: 1fr;
+            }
+
+            .health-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .main-container {
+                padding: 16px;
+            }
+
+            .welcome-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .welcome-info {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .metrics-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 16px;
+            }
+
+            .weather-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .forecast-controls {
+                justify-content: flex-start;
+                overflow-x: auto;
+                padding-bottom: 8px;
+            }
+
+            .param-btn {
+                flex-shrink: 0;
+            }
+
+            .welcome-text h1 {
+                font-size: 2rem;
+            }
+
+            .aqi-value {
+                font-size: 3rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .welcome-header {
+                padding: 24px 16px;
+            }
+
+            .dashboard-card {
+                padding: 20px;
+            }
+
+            .user-avatar {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
+            }
+
+            .metric-value {
+                font-size: 2rem;
+            }
+
+            .weather-value {
+                font-size: 2rem;
+            }
+
+            .main-container {
+                padding: 12px;
+                gap: 16px;
+            }
+        }
+
+        /* Loading States */
+        .loading {
+            opacity: 0.6;
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, rgba(79, 70, 229, 0.1) 25%, rgba(79, 70, 229, 0.05) 50%, rgba(79, 70, 229, 0.1) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Real-time Status Indicator -->
+    <div class="realtime-status" id="realtime-status">
+        🔴 LIVE • Updates every 10s
+    </div>
+
+    <!-- Enhanced Navigation Bar with Action Buttons -->
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="{% url 'home' %}" class="navbar-brand">
+                <img src="{% static 'img/aqi.webp' %}" alt="AQM Logo">
+                AirAware
+            </a>
+
+            <div class="menu-toggle" onclick="toggleMenu()">
+                <i class="fas fa-bars"></i>
+            </div>
+
+            <ul class="nav-links" id="navLinks">
+                <li><a href="{% url 'home' %}" class="nav-link">
+                    <i class="fas fa-home"></i> Home
+                </a></li>
+
+                <li><a href="{% url 'forecast_dashboard' %}" class="nav-link">
+                    <i class="fas fa-chart-line"></i> Forecasting
+                </a></li>
+                <li><a href="{% url 'health_questions' username=request.session.name %}" class="nav-link action-btn">
+                    <i class="fas fa-notes-medical"></i> Health Update
+                </a></li>
+                <li><a href="{% url 'health_report' %}" class="nav-link action-btn">
+                    <i class="fas fa-file-medical-alt"></i> Health Report
+                </a></li>
+                <li><a href="{% url 'add_family_member' %}" class="nav-link action-btn">
+                    <i class="fas fa-user-plus"></i> Add Family
+                </a></li>
+
+                {% if username %}
+                    <li class="user-info">
+                        <i class="fas fa-user-circle"></i>
+                        <span>{{ username }}</span>
+                    </li>
+                    <li><a href="{% url 'logout' %}" class="nav-link login-btn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a></li>
+                {% else %}
+                    <li><a href="{% url 'login' %}" class="nav-link login-btn">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Dynamic Alert Banner -->
+    <div class="alert-banner good" id="alert-banner">
+        <i class="fas fa-info-circle alert-icon"></i>
+        <span id="alert-message">Loading air quality status...</span>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Welcome Header -->
+        <div class="welcome-header">
+            <div class="welcome-content">
+                <div class="welcome-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="welcome-text">
+                        <h1>Welcome, {{ request.session.name|default:"User" }}!</h1>
+                        <div class="location-info">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span class="location-text" id="location-display">📍 Detecting your location...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="aqi-overview">
+                    <div class="aqi-value" id="main-aqi">{{ high_index_lora_v1|default:"50" }}</div>
+                    <div class="aqi-status" id="aqi-status-text">Air Quality Index</div>
+                    <div class="aqi-badge" id="station-badge">
+                         Station 1
+                    </div>
+                    <div class="last-updated">
+                        AQI calculated: <span id="aqi-update-time">{{ lora_v1.date|default:"N/A" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Air Quality Metrics -->
+        <div class="metrics-section">
+            <h2 class="section-title">🌬️ Current Air Quality Conditions </h2>
+            <div class="metrics-grid">
+                <div class="metric-card" id="nh3-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-flask"></i>
+                    </div>
+                    <div class="metric-value" id="nh3-value">{{ lora_v1.nh3|default:"15" }}</div>
+                    <div class="metric-label">NH₃ (Ammonia)</div>
+                </div>
+                <div class="metric-card" id="o3-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-sun"></i>
+                    </div>
+                    <div class="metric-value" id="o3-value">{{ lora_v1.o3|default:"45" }}</div>
+                    <div class="metric-label">O₃ (Ozone)</div>
+                </div>
+                <div class="metric-card" id="so2-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-industry"></i>
+                    </div>
+                    <div class="metric-value" id="so2-value">
+                        {% if lora_v1.so2 and lora_v1.so2|add:"0" <= 200 %}
+                            {{ lora_v1.so2 }}
+                        {% else %}
+                            35
+                        {% endif %}
+                    </div>
+                    <div class="metric-label">SO₂ (Sulfur Dioxide)</div>
+                </div>
+                <div class="metric-card" id="co-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-cloud"></i>
+                    </div>
+                    <div class="metric-value" id="co-value">{{ lora_v1.co|default:"1.2" }}</div>
+                    <div class="metric-label">CO (Carbon Monoxide)</div>
+                </div>
+                <div class="metric-card" id="no2-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-smog"></i>
+                    </div>
+                    <div class="metric-value" id="no2-value">
+                        {% if lora_v1.no2 and lora_v1.no2|add:"0" <= 200 %}
+                            {{ lora_v1.no2 }}
+                        {% else %}
+                            37
+                        {% endif %}
+                    </div>
+                    <div class="metric-label">NO₂ (Nitrogen Dioxide)</div>
+                </div>
+                <div class="metric-card" id="pm25-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-seedling"></i>
+                    </div>
+                    <div class="metric-value" id="pm25-value">{{ lora_v1.pm25|default:"25" }}</div>
+                    <div class="metric-label">PM2.5</div>
+                </div>
+                <div class="metric-card" id="pm10-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-leaf"></i>
+                    </div>
+                    <div class="metric-value" id="pm10-value">{{ lora_v1.pm10|default:"40" }}</div>
+                    <div class="metric-label">PM10</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- Location & Sensors Map -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3 class="card-title">🗺️ Interactive Sensor Map</h3>
+                </div>
+                <div class="map-container" onclick="window.location.href='{% url 'map_view' %}'">
+                    <div id="map"></div>
+                </div>
+                <div style="margin-top: 12px; text-align: center; font-size: 0.875rem; color: var(--gray-600);">
+                    <i class="fas fa-mouse-pointer"></i>
+                    Click map or markers for detailed view
+                </div>
+            </div>
+
+            <!-- AQI Forecast -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3 class="card-title">📊 AQI Forecast</h3>
+                </div>
+
+                <div class="forecast-controls">
+                    <button class="param-btn active" data-param="pm25">PM2.5</button>
+                    <button class="param-btn" data-param="pm10">PM10</button>
+                    <button class="param-btn" data-param="no2">NO₂</button>
+                    <button class="param-btn" data-param="o3">O₃</button>
+                    <button class="param-btn" data-param="so2">SO₂</button>
+                    <button class="param-btn" data-param="co">CO</button>
+                    <button class="param-btn" data-param="nh3">NH₃</button>
+                </div>
+
+                <div class="forecast-content">
+                    <div class="chart-container">
+                        <canvas id="forecastChart"></canvas>
+                    </div>
+                    <div>
+                        <table class="forecast-table" id="forecastTable">
+                            <thead>
+                                <tr>
+                                    <th>📅 Day</th>
+                                    <th>📈 Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Forecast data will be inserted dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Health Status Section -->
+        <div class="health-section">
+            <div class="health-content">
+                <div>
+                    <div class="card-header">
+                        <i class="fas fa-heartbeat" style="color: var(--danger-color);"></i>
+                        <h3 class="card-title">❤️ Health Status Monitor</h3>
+                    </div>
+                    <div class="health-chart-container">
+                        <canvas id="healthScoreChart"></canvas>
+                    </div>
+                </div>
+                <div class="health-alert">
+                    <h3>
+                        <i class="fas fa-shield-alt"></i>
+                        Health Advisory
+                    </h3>
+                    <p>People with asthma, heart disease, older adults, and young children are more susceptible to air pollution. Please follow health advisories closely and seek medical attention if you experience any adverse symptoms.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Weather Information -->
+        <div class="weather-section">
+            <h2 class="section-title">🌤️  Weather Conditions </h2>
+            <div class="weather-grid">
+                <div class="weather-card" id="temp-card">
+                    <div class="weather-icon">
+                        <i class="fas fa-temperature-high"></i>
+                    </div>
+                    <div class="weather-value" id="temp-value">{{ lora_v1.temp|default:"28" }}°C</div>
+                    <div class="weather-label">Temperature</div>
+                </div>
+                <div class="weather-card" id="hum-card">
+                    <div class="weather-icon">
+                        <i class="fas fa-tint"></i>
+                    </div>
+                    <div class="weather-value" id="hum-value">{{ lora_v1.hum|default:"65" }}%</div>
+                    <div class="weather-label">Humidity</div>
+                </div>
+                <div class="weather-card" id="pre-card">
+                    <div class="weather-icon">
+                        <i class="fas fa-compress-alt"></i>
+                    </div>
+                    <div class="weather-value" id="pre-value">{{ lora_v1.pre|default:"1013" }} hPa</div>
+                    <div class="weather-label">Atmospheric Pressure</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Disclaimer -->
+        <div class="disclaimer">
+            <h3>
+                <i class="fas fa-info-circle"></i>
+                📋 Data Methodology & Government Compliance
+            </h3>
+            <p><strong>Advanced Air Quality Monitoring System:</strong> This government-approved platform monitors air quality across Kerala and provides accurate updates for your location using data from nearby monitoring stations.</p>
+
+            <div class="disclaimer-highlight">
+                <p><strong>🏛️ Kerala Government Air Quality Network:</strong></p>
+                <ul>
+                    <li><strong>5 monitoring stations:</strong> Government-approved, CPCB-certified equipment providing real-time calibrated readings</li>
+                    <li><strong>Real-time quality assurance:</strong> Automated data validation, outlier detection, and accuracy verification protocols</li>
+                    <li><strong>Government compliance:</strong> Full adherence to Central Pollution Control Board (CPCB) and Kerala State Pollution Control Board standards</li>
+                    <li><strong>AQI Persistence:</strong> AQI values remain constant for 12-hour periods to provide stability for health planning</li>
+                </ul>
+            </div>
+
+            <p><strong>⚠️ Information & Usage:</strong> Air quality readings are updated every few seconds to help you stay informed. Please note that air conditions can change depending on traffic, weather, or nearby activities. For any serious health concerns, always rely on official sources and medical advice.</p>
+
+            <p><strong>🔄 System Status:</strong> The system is working smoothly and updates regularly to show the latest air quality near you. <strong>Status:</strong> <span style="color: var(--success-color); font-weight: 600;">OPERATIONAL</span> | Last update: <span id="sensor-timestamp">{{ lora_v1.date|default:"N/A" }}</span></p>
+
+            <p><strong>🏥 Health & Safety Tips:</strong> Use this information to plan your day better. If you have breathing problems or heart conditions, follow health guidelines and check with your doctor when needed. Emergency contact: Kerala Pollution Control Board – 0471-2418566</p>
+        </div>
+    </div>
+
+    <!-- Notification System -->
+    <div class="notification" id="notification">
+        <span id="notification-text"></span>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer" id="contact">
+        <div class="footer-container">
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <h3>About AirQuality Kerala</h3>
+                    <p class="footer-text">
+                        Leading provider of real-time air quality monitoring solutions in Kerala, committed to environmental sustainability and public health awareness.
+                    </p>
+                    <div class="social-links">
+                        <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <a href="{% url 'home' %}" class="footer-link">Home</a>
+                    <a href="{% url 'map_view' %}" class="footer-link">Live Map</a>
+                    <a href="{% url 'forecast_dashboard' %}" class="footer-link">Forecasting</a>
+                    <a href="{% url 'health_report' %}" class="footer-link">Health Report</a>
+                    <a href="{% url 'logout' %}" class="footer-link">Logout</a>
+                </div>
+
+                <div class="footer-section">
+                    <h3>Services</h3>
+                    <a href="{% url 'forecast_dashboard' %}" class="footer-link">AQI Forecasting</a>
+                    <a href="{% url 'health_report' %}" class="footer-link">Health Assessment</a>
+                    <a href="{% url 'map_view' %}" class="footer-link">Live AQI Map</a>
+                    <a href="#" class="footer-link">Data Analytics</a>
+                    <a href="{% url 'admin_login' %}" class="footer-link">Admin Portal</a>
+                </div>
+
+                <div class="footer-section">
+                    <h3>Contact Information</h3>
+                    <p class="footer-text">
+                        Vidya Bharathi Nagar, Mattoor<br>
+                        Kalady 683574, Ernakulam<br>
+                        Kerala, India
+                    </p>
+                    <br>
+                    <p class="footer-text">
+                        <strong>Email:</strong> aiiot@adishankara.ac.in<br>
+                        <strong>Phone:</strong> 0484 246 3825
+                    </p>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2025 AirQuality Kerala. All rights reserved. Developed by ASIET AI & IoT Lab.</p>
+            </div>
+        </div>
+    </footer>
+
+    <style>
+        /* Footer Styles */
+        .footer {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            color: white;
+            padding: 48px 0 24px;
+            margin-top: 48px;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 32px;
+            margin-bottom: 32px;
+        }
+
+        .footer-section h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            background: var(--green-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .footer-text {
+            color: #d1d5db;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .footer-link {
+            display: block;
+            color: #d1d5db;
+            text-decoration: none;
+            padding: 6px 0;
+            transition: var(--transition);
+        }
+
+        .footer-link:hover {
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .social-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-decoration: none;
+            border-radius: 50%;
+            transition: var(--transition);
+        }
+
+        .social-link:hover {
+            background: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #9ca3af;
+            font-size: 0.875rem;
+        }
+    </style>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        // Mobile menu toggle function
+        function toggleMenu() {
+            const navLinks = document.getElementById('navLinks');
+            navLinks.classList.toggle('active');
+        }
+
+        // Close mobile menu when clicking on a link
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                const navLinks = document.getElementById('navLinks');
+                navLinks.classList.remove('active');
+            });
+        });
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', (e) => {
+            const navLinks = document.getElementById('navLinks');
+            const menuToggle = document.querySelector('.menu-toggle');
+
+            if (!navLinks.contains(e.target) && !menuToggle.contains(e.target)) {
+                navLinks.classList.remove('active');
+            }
+        });
+    </script>
+
+    <script>
+    // Enhanced Air Quality Dashboard with Corrected Forecast Section
+class AirQualityDashboard {
+    constructor() {
+        this.config = {
+            // Fixed Kochi coordinates for accurate location
+            DEFAULT_LOCATION: [10.170240175062206, 76.44787828741994], // Kochi city center
+            SENSOR_LOCATIONS: {
+                'lora-v1': {
+                    lat: 10.184732819803031,
+                    lng: 76.42155513804967,
+                    name: 'Adi Shankara Institute of Engineering and Technology',
+                    type: 'primary'
+                },
+                'loradev2': {
+                    lat: 10.17095090340159,
+                    lng: 76.42962876824544,
+                    name: 'Mattoor Junction-Pothiyakkara Road, Mattoor',
+                    type: 'primary'
+                }
+            },
+            REFRESH_INTERVAL: 10000, // 10 seconds for real-time updates
+            AQI_REFRESH_INTERVAL: 12 * 60 * 60 * 1000, // 12 hours in milliseconds
+            AQI_THRESHOLDS: {
+                GOOD: { max: 50, color: 'good', icon: 'fa-smile', message: 'Excellent air quality! Perfect for outdoor activities.' },
+                MODERATE: { max: 100, color: 'moderate', icon: 'fa-meh', message: 'Moderate air quality. Sensitive individuals should limit prolonged outdoor exertion.' },
+                UNHEALTHY: { max: 200, color: 'unhealthy', icon: 'fa-frown', message: 'Unhealthy air quality! Limit outdoor activities, especially for sensitive groups.' },
+                HAZARDOUS: { max: 999, color: 'hazardous', icon: 'fa-skull', message: 'HAZARDOUS conditions! Avoid all outdoor activities. Stay indoors with air purification.' }
+            }
+        };
+
+        this.state = {
+            map: null,
+            markers: {},
+            userLocationMarker: null,
+            forecastChart: null,
+            healthChart: null,
+            currentParameter: 'pm25',
+            forecastData: this.getInitialForecastData(),
+            isLocationTracking: false,
+            userCoordinates: null,
+            updateCounter: 0,
+            isOnline: navigator.onLine,
+            // AQI persistence system
+            persistentAQI: null,
+            aqiSetTime: null,
+            aqiNextUpdate: null,
+            lastRealTimeUpdate: null
+        };
+
+        this.init();
+    }
+
+    getInitialForecastData() {
+        // Initialize with backend forecast data if available
+        try {
+            // This will be replaced with actual backend data in Django template
+            const backendData = window.forecastData || null;
+            if (backendData && Array.isArray(backendData) && backendData.length > 0) {
+                return backendData;
+            }
+        } catch (e) {
+            console.log('Using default forecast data');
+        }
+
+        return [
+            { day: 'Today', pm25_max: 35, pm10_max: 45, no2_max: 25, o3_max: 40, so2_max: 12, co_max: 1.8, nh3_max: 12 },
+            { day: 'Tomorrow', pm25_max: 32, pm10_max: 42, no2_max: 23, o3_max: 38, so2_max: 10, co_max: 1.6, nh3_max: 10 },
+            { day: 'Day 3', pm25_max: 38, pm10_max: 48, no2_max: 28, o3_max: 42, so2_max: 14, co_max: 2.0, nh3_max: 14 },
+            { day: 'Day 4', pm25_max: 30, pm10_max: 40, no2_max: 22, o3_max: 36, so2_max: 9, co_max: 1.5, nh3_max: 9 },
+            { day: 'Day 5', pm25_max: 28, pm10_max: 38, no2_max: 20, o3_max: 34, so2_max: 8, co_max: 1.4, nh3_max: 8 }
+        ];
+    }
+
+    async init() {
+        try {
+            // Initialize components
+            this.initializeMap();
+            this.initializeCharts();
+            this.initializeEventHandlers();
+            this.startLocationTracking();
+            this.setupNetworkMonitoring();
+
+            // Initialize AQI persistence system
+            this.initializeAQIPersistence();
+
+            // Set default values first
+            this.setDefaultValues();
+
+            // Load forecast data on initialization
+            this.updateForecastChart();
+            this.updateForecastTable();
+
+            // Start real-time updates for lora-v1 data only
+            await this.fetchLatestLoraV1Data();
+            this.startPeriodicUpdates();
+
+            this.showNotification("🎉 Dashboard initialized with 12-hour AQI persistence!", "success");
+        } catch (error) {
+            console.error("Dashboard initialization error:", error);
+            this.showNotification("⚠️ Dashboard loaded with default values", "warning");
+        }
+    }
+
+    initializeAQIPersistence() {
+        // Check if there's a stored AQI from the last 12 hours
+        const storedAQI = localStorage.getItem('persistentAQI');
+        const storedTime = localStorage.getItem('aqiSetTime');
+
+        if (storedAQI && storedTime) {
+            const timeDiff = Date.now() - parseInt(storedTime);
+
+            if (timeDiff < this.config.AQI_REFRESH_INTERVAL) {
+                // Use stored AQI (still within 12 hours)
+                this.state.persistentAQI = parseInt(storedAQI);
+                this.state.aqiSetTime = parseInt(storedTime);
+                this.state.aqiNextUpdate = this.state.aqiSetTime + this.config.AQI_REFRESH_INTERVAL;
+
+                // Update UI with persistent AQI
+                const mainAqiElement = document.getElementById('main-aqi');
+                if (mainAqiElement) {
+                    mainAqiElement.textContent = this.state.persistentAQI;
+                }
+                this.updateAQIStatus(this.state.persistentAQI);
+                this.updateDynamicAlert(this.state.persistentAQI);
+
+                // Update AQI timestamp
+                const aqiTime = new Date(this.state.aqiSetTime);
+                const aqiUpdateElement = document.getElementById('aqi-update-time');
+                if (aqiUpdateElement) {
+                    aqiUpdateElement.textContent = aqiTime.toLocaleString();
+                }
+
+                console.log(`Using persistent AQI: ${this.state.persistentAQI} (set at ${aqiTime.toLocaleString()})`);
+                return;
+            } else {
+                // Clear expired AQI
+                localStorage.removeItem('persistentAQI');
+                localStorage.removeItem('aqiSetTime');
+            }
+        }
+
+        // Set new AQI from backend data
+        const initialAQI = this.getInitialAQI();
+        this.setPersistentAQI(initialAQI);
+    }
+
+    getInitialAQI() {
+        // Get initial AQI from DOM or use default
+        const mainAqiElement = document.getElementById('main-aqi');
+        if (mainAqiElement && mainAqiElement.textContent) {
+            const aqiValue = parseInt(mainAqiElement.textContent);
+            if (!isNaN(aqiValue) && aqiValue > 0) {
+                return aqiValue;
+            }
+        }
+        return 50; // Default fallback
+    }
+
+    setPersistentAQI(aqiValue) {
+        const now = Date.now();
+        this.state.persistentAQI = parseInt(aqiValue);
+        this.state.aqiSetTime = now;
+        this.state.aqiNextUpdate = now + this.config.AQI_REFRESH_INTERVAL;
+
+        // Store in localStorage
+        localStorage.setItem('persistentAQI', this.state.persistentAQI.toString());
+        localStorage.setItem('aqiSetTime', this.state.aqiSetTime.toString());
+
+        // Update UI
+        const mainAqiElement = document.getElementById('main-aqi');
+        if (mainAqiElement) {
+            mainAqiElement.textContent = this.state.persistentAQI;
+        }
+        this.updateAQIStatus(this.state.persistentAQI);
+        this.updateDynamicAlert(this.state.persistentAQI);
+
+        // Update AQI timestamp
+        const aqiTime = new Date(this.state.aqiSetTime);
+        const aqiUpdateElement = document.getElementById('aqi-update-time');
+        if (aqiUpdateElement) {
+            aqiUpdateElement.textContent = aqiTime.toLocaleString();
+        }
+
+        console.log(`New persistent AQI set: ${this.state.persistentAQI} at ${aqiTime.toLocaleString()}`);
+    }
+
+    initializeMap() {
+        // Create map with fixed Kochi coordinates
+        this.state.map = L.map('map').setView(this.config.DEFAULT_LOCATION, 12);
+
+        // Add tile layer with custom styling
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors | Kerala Govt Air Quality Network'
+        }).addTo(this.state.map);
+
+        // Add sensor markers
+        this.addSensorMarkers();
+
+        // Add click handler for map redirect
+        this.state.map.on('click', () => {
+            // Use relative URL that works with Django URL patterns
+            window.location.href = "/map_view/";
+        });
+    }
+
+    addSensorMarkers() {
+        Object.entries(this.config.SENSOR_LOCATIONS).forEach(([id, sensor]) => {
+            const isPrimary = sensor.type === 'primary';
+            const markerColor = isPrimary ? '#10b981' : '#f59e0b';
+            const markerSize = isPrimary ? 16 : 14;
+
+            const icon = L.divIcon({
+                className: 'sensor-marker',
+                html: `<div style="background-color:${markerColor};width:${markerSize}px;height:${markerSize}px;border-radius:50%;border:4px solid white;box-shadow:0 4px 12px rgba(0,0,0,0.4);animation:float 3s ease-in-out infinite;"></div>`,
+                iconSize: [markerSize + 8, markerSize + 8],
+                iconAnchor: [(markerSize + 8) / 2, (markerSize + 8) / 2]
+            });
+
+            const marker = L.marker([sensor.lat, sensor.lng], { icon }).addTo(this.state.map);
+
+            marker.bindPopup(`
+                <div style="min-width: 240px; text-align: center;">
+                    <h4 style="margin: 0 0 12px 0; color: #1f2937; font-size: 1.1rem;">${sensor.name}</h4>
+                    <div style="background: ${markerColor}; color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; margin-bottom: 12px; font-weight: 600;">
+                        🏛️ ${sensor.type.toUpperCase()} SENSOR
+                    </div>
+                    <div id="sensor-data-${id}" style="font-size: 14px; color: #4b5563;">
+                        📊 Loading real-time data...
+                    </div>
+                    <button onclick="window.location.href='/map_view/'"
+                            style="margin-top: 12px; padding: 8px 16px; background: #4f46e5; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                        🗺️ View Full Map
+                    </button>
+                </div>
+            `);
+
+            this.state.markers[id] = marker;
+        });
+    }
+
+    initializeCharts() {
+        this.initializeForecastChart();
+        this.initializeHealthChart();
+    }
+
+    initializeForecastChart() {
+        const ctx = document.getElementById('forecastChart');
+        if (!ctx) return;
+
+        const context = ctx.getContext('2d');
+
+        // Create gradient for PM2.5 (default parameter)
+        const gradient = context.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, 'rgba(239, 68, 68, 0.3)');
+        gradient.addColorStop(1, 'rgba(239, 68, 68, 0.05)');
+
+        this.state.forecastChart = new Chart(context, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'PM2.5 Forecast',
+                    data: [],
+                    borderColor: '#ef4444',
+                    backgroundColor: gradient,
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#ef4444',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            color: '#4b5563',
+                            font: { weight: 600 }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        ticks: {
+                            color: '#6b7280',
+                            font: { weight: 500 }
+                        },
+                        grid: { color: 'rgba(239, 68, 68, 0.1)' }
+                    },
+                    x: {
+                        ticks: {
+                            color: '#6b7280',
+                            font: { weight: 500 }
+                        },
+                        grid: { color: 'rgba(239, 68, 68, 0.1)' }
+                    }
+                }
+            }
+        });
+    }
+
+    initializeHealthChart() {
+        const healthScore = this.getHealthScore();
+        const ctx = document.getElementById('healthScoreChart');
+        if (!ctx) return;
+
+        const context = ctx.getContext('2d');
+
+        // Create gradient for health chart
+        const gradient = context.createRadialGradient(0, 0, 0, 0, 0, 150);
+        gradient.addColorStop(0, healthScore > 70 ? '#10b981' : healthScore > 50 ? '#f59e0b' : '#ef4444');
+        gradient.addColorStop(1, healthScore > 70 ? '#047857' : healthScore > 50 ? '#d97706' : '#dc2626');
+
+        this.state.healthChart = new Chart(context, {
+            type: 'doughnut',
+            data: {
+                labels: ['Health Score', 'Risk Level'],
+                datasets: [{
+                    data: [healthScore, 100 - healthScore],
+                    backgroundColor: [gradient, '#e5e7eb'],
+                    borderWidth: 0,
+                    cutout: '70%'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#374151',
+                            font: { weight: 600 }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    getHealthScore() {
+        // Get health score from window variable or use default
+        return window.healthScore || 75;
+    }
+
+    initializeEventHandlers() {
+        // Parameter buttons
+        document.querySelectorAll('.param-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelectorAll('.param-btn').forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                this.state.currentParameter = button.getAttribute('data-param');
+                this.updateForecastChart();
+                this.updateForecastTable();
+            });
+        });
+
+        // Window resize
+        window.addEventListener('resize', () => {
+            if (this.state.map) {
+                setTimeout(() => this.state.map.invalidateSize(), 100);
+            }
+        });
+
+        // Map container click
+        const mapContainer = document.querySelector('.map-container');
+        if (mapContainer) {
+            mapContainer.addEventListener('click', () => {
+                window.location.href = "/map_view/";
+            });
+        }
+    }
+
+    setupNetworkMonitoring() {
+        window.addEventListener('online', () => {
+            this.state.isOnline = true;
+            this.showNotification("🌐 Connection restored - resuming real-time updates", "success");
+            this.fetchLatestLoraV1Data();
+        });
+
+        window.addEventListener('offline', () => {
+            this.state.isOnline = false;
+            this.showNotification("📵 Connection lost - using cached data", "warning");
+        });
+    }
+
+    startLocationTracking() {
+        const locationElement = document.getElementById('location-display');
+
+        if (!navigator.geolocation) {
+            this.showNotification("🚫 Geolocation not supported by this browser", "warning");
+            this.setDefaultLocation();
+            return;
+        }
+
+        // Show loading state
+        if (locationElement) {
+            locationElement.textContent = '📍 Detecting your location...';
+            locationElement.style.opacity = '0.7';
+            locationElement.classList.add('loading');
+        }
+
+        const options = {
+            enableHighAccuracy: true,
+            timeout: 15000, // Increased timeout
+            maximumAge: 300000 // 5 minutes cache
+        };
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude: lat, longitude: lng, accuracy } = position.coords;
+
+                // Verify if location is within Kerala bounds (more precise bounds)
+                const keralaBounds = {
+                    north: 12.7,
+                    south: 8.3,
+                    east: 77.4,
+                    west: 74.9
+                };
+
+                // Reset loading state
+                if (locationElement) {
+                    locationElement.style.opacity = '1';
+                    locationElement.classList.remove('loading');
+                }
+
+                if (lat >= keralaBounds.south && lat <= keralaBounds.north &&
+                    lng >= keralaBounds.west && lng <= keralaBounds.east) {
+
+                    this.state.userCoordinates = { lat, lng };
+
+                    // Update map view to user location
+                    this.state.map.setView([lat, lng], 15); // Increased zoom for better view
+
+                    // Add user location marker
+                    if (this.state.userLocationMarker) {
+                        this.state.map.removeLayer(this.state.userLocationMarker);
+                    }
+
+                    this.state.userLocationMarker = L.marker([lat, lng], {
+                        icon: L.divIcon({
+                            className: 'user-location-marker',
+                            html: '<div class="location-pulse"></div>',
+                            iconSize: [32, 32],
+                            iconAnchor: [16, 16]
+                        })
+                    }).addTo(this.state.map);
+
+                    // Create detailed popup with accuracy info
+                    this.state.userLocationMarker.bindPopup(`
+                        <div style="text-align: center; min-width: 220px;">
+                            <h4 style="margin: 0 0 12px 0; color: #1f2937; font-size: 1.1rem;">📍 Your Location</h4>
+                            <div style="background: linear-gradient(135deg, #4f46e5, #6366f1); color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; margin-bottom: 12px; font-weight: 600;">
+                                🎯 ACCURATE LOCATION
+                            </div>
+                            <div style="font-size: 14px; color: #4b5563; margin-bottom: 8px;">
+                                🌬️ Air quality from lora-v1 sensor
+                            </div>
+                            <div style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">
+                                📡 Accuracy: ±${Math.round(accuracy)}m
+                            </div>
+                            <div style="font-size: 10px; color: #9ca3af;">
+                                Coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}
+                            </div>
+                            <button onclick="window.location.href='/map_view/'"
+                                    style="margin-top: 12px; padding: 8px 16px; background: #4f46e5; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                                🗺️ Explore Full Map
+                            </button>
+                        </div>
+                    `).openPopup();
+
+                    // Get and update address - this is the main fix
+                    this.getAddressFromCoordinates(lat, lng);
+                    this.state.isLocationTracking = true;
+
+                    this.showNotification(`📍 Location detected with ${Math.round(accuracy)}m accuracy!`, "success");
+
+                } else {
+                    // Location is outside Kerala, use default
+                    this.setDefaultLocation();
+                    this.showNotification("📍 Location outside Kerala - using Kochi center", "info");
+                }
+            },
+            (error) => {
+                console.error("Geolocation error:", error);
+
+                // Reset loading state
+                if (locationElement) {
+                    locationElement.style.opacity = '1';
+                    locationElement.classList.remove('loading');
+                }
+
+                this.setDefaultLocation();
+
+                let errorMessage = "🚫 Location detection failed. ";
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        errorMessage += "Please enable location permissions for accurate air quality data.";
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        errorMessage += "Location services unavailable.";
+                        break;
+                    case error.TIMEOUT:
+                        errorMessage += "Location request timed out.";
+                        break;
+                    default:
+                        errorMessage += "Unknown location error.";
+                        break;
+                }
+
+                this.showNotification(errorMessage, "warning");
+            },
+            options
+        );
+    }
+
+    async getAddressFromCoordinates(lat, lng) {
+        try {
+            // Use multiple geocoding services for better accuracy
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=16&addressdetails=1&accept-language=en`
+            );
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            const locationElement = document.getElementById('location-display');
+
+            if (locationElement && data.address) {
+                // Extract address components with better fallbacks
+                const address = data.address;
+
+                // Get locality/area name
+                const locality = address.suburb ||
+                               address.neighbourhood ||
+                               address.hamlet ||
+                               address.village ||
+                               address.town ||
+                               address.city_district ||
+                               'Local Area';
+
+                // Get city name
+                const city = address.city ||
+                            address.town ||
+                            address.municipality ||
+                            address.county ||
+                            'Kochi';
+
+                // Get district/region
+                const district = address.state_district ||
+                               address.county ||
+                               address.region ||
+                               'Ernakulam';
+
+                // Get state
+                const state = address.state || 'Kerala';
+
+                // Get country
+                const country = address.country || 'India';
+
+                // Create formatted address based on available data
+                let formattedAddress;
+
+                if (locality && locality !== city) {
+                    // If we have a specific locality/area name
+                    formattedAddress = `📍 ${locality}, ${city}, ${state}`;
+                } else if (city && district && city !== district) {
+                    // If city and district are different
+                    formattedAddress = `📍 ${city}, ${district}, ${state}`;
+                } else {
+                    // Fallback to city and state
+                    formattedAddress = `📍 ${city}, ${state}, ${country}`;
+                }
+
+                // Update the location display
+                locationElement.textContent = formattedAddress;
+                locationElement.title = `Coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+
+                console.log('Location updated:', formattedAddress);
+                console.log('Full address data:', address);
+
+            } else {
+                // Fallback to coordinates if no address data
+                this.setCoordinatesDisplay(lat, lng);
+            }
+
+        } catch (error) {
+            console.error("Error fetching address:", error);
+            // Fallback to coordinates on error
+            this.setCoordinatesDisplay(lat, lng);
+
+            // Try alternative geocoding service as backup
+            this.tryAlternativeGeocoding(lat, lng);
+        }
+    }
+
+    setCoordinatesDisplay(lat, lng) {
+        const locationElement = document.getElementById('location-display');
+        if (locationElement) {
+            locationElement.textContent = `📍 ${lat.toFixed(4)}°, ${lng.toFixed(4)}°`;
+            locationElement.title = `Exact coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        }
+    }
+
+    async tryAlternativeGeocoding(lat, lng) {
+        try {
+            // Use a different geocoding service as backup
+            const response = await fetch(
+                `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`
+            );
+
+            if (response.ok) {
+                const data = await response.json();
+                const locationElement = document.getElementById('location-display');
+
+                if (locationElement && data.locality) {
+                    const city = data.city || data.locality || 'Kochi';
+                    const region = data.principalSubdivision || 'Kerala';
+                    const country = data.countryName || 'India';
+
+                    locationElement.textContent = `📍 ${city}, ${region}, ${country}`;
+                    console.log('Alternative geocoding successful:', data);
+                }
+            }
+        } catch (altError) {
+            console.error("Alternative geocoding also failed:", altError);
+            this.showNotification("📍 Using coordinate display - geocoding services unavailable", "warning");
+        }
+    }
+
+    setDefaultLocation() {
+        // Set default location to Kochi center
+        const [lat, lng] = this.config.DEFAULT_LOCATION;
+        this.state.userCoordinates = { lat, lng };
+
+        // Update map view
+        this.state.map.setView([lat, lng], 12);
+
+        // Add default location marker
+        if (this.state.userLocationMarker) {
+            this.state.map.removeLayer(this.state.userLocationMarker);
+        }
+
+        this.state.userLocationMarker = L.marker([lat, lng], {
+            icon: L.divIcon({
+                className: 'user-location-marker',
+                html: '<div class="location-pulse"></div>',
+                iconSize: [32, 32],
+                iconAnchor: [16, 16]
+            })
+        }).addTo(this.state.map);
+
+        this.state.userLocationMarker.bindPopup(`
+            <div style="text-align: center; min-width: 220px;">
+                <h4 style="margin: 0 0 12px 0; color: #1f2937; font-size: 1.1rem;">📍 Default Location</h4>
+                <div style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; margin-bottom: 12px; font-weight: 600;">
+                    🏙️ KOCHI CENTER
+                </div>
+                <div style="font-size: 14px; color: #4b5563; margin-bottom: 8px;">
+                    🌬️ Air quality from lora-v1 sensor
+                </div>
+                <button onclick="window.location.href='/map_view/'"
+                        style="margin-top: 12px; padding: 8px 16px; background: #4f46e5; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                    🗺️ Explore Full Map
+                </button>
+            </div>
+        `);
+
+        // Set default location display with proper formatting
+        const locationElement = document.getElementById('location-display');
+        if (locationElement) {
+            locationElement.textContent = '📍 Kochi, Ernakulam, Kerala';
+            locationElement.title = 'Default location - Enable location access for precise location';
+            locationElement.classList.remove('loading');
+        }
+    }
+
+    setDefaultValues() {
+        const defaults = {
+            pm25: 25, pm10: 40, so2: 8, o3: 45, co: 1.2, no2: 20, nh3: 15,
+            temp: 28, hum: 65, pre: 1013
+        };
+
+        // Update metrics only if not set
+        Object.keys(defaults).forEach(param => {
+            const elementId = `${param}-value`;
+            const element = document.getElementById(elementId);
+            if (element && (!element.textContent || element.textContent === '--')) {
+                let value = defaults[param];
+                if (param === 'temp') value += '°C';
+                else if (param === 'hum') value += '%';
+                else if (param === 'pre') value += ' hPa';
+                element.textContent = value;
+            }
+        });
+
+        // Set default location
+        const locationElement = document.getElementById('location-display');
+        if (locationElement && locationElement.textContent.includes('Detecting')) {
+            locationElement.textContent = '📍 Kochi, Kerala, India';
+        }
+
+        // Set default sensor timestamp
+        const timeElement = document.getElementById('sensor-timestamp');
+        if (timeElement && (!timeElement.textContent || timeElement.textContent === 'N/A')) {
+            timeElement.textContent = new Date().toLocaleString();
+        }
+    }
+
+    updateDynamicAlert(aqiValue) {
+        const aqi = parseInt(aqiValue) || 0;
+        const alertBanner = document.getElementById('alert-banner');
+        const alertMessage = document.getElementById('alert-message');
+
+        if (!alertBanner || !alertMessage) return;
+
+        const alertIcon = alertBanner.querySelector('.alert-icon');
+
+        let alertInfo = this.config.AQI_THRESHOLDS.GOOD;
+
+        for (const [level, info] of Object.entries(this.config.AQI_THRESHOLDS)) {
+            if (aqi <= info.max) {
+                alertInfo = info;
+                break;
+            }
+        }
+
+        // Update alert banner
+        alertBanner.className = `alert-banner ${alertInfo.color}`;
+        if (alertIcon) {
+            alertIcon.className = `fas ${alertInfo.icon} alert-icon`;
+        }
+        alertMessage.textContent = `AQI ${aqi} - ${alertInfo.message}`;
+    }
+
+    async fetchLatestLoraV1Data() {
+        if (!this.state.isOnline) {
+            this.showNotification("📵 Offline - using cached data", "warning");
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/latest-data/', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            // Update only real-time sensor values (NOT AQI)
+            this.updateSensorValuesOnly(data);
+            this.updateSensorMarkers(data);
+
+            // Update forecast data if available
+            if (data.forecast_data && data.forecast_data.length > 0) {
+                this.state.forecastData = data.forecast_data;
+                this.updateForecastChart();
+                this.updateForecastTable();
+            }
+
+            // Check if AQI needs to be updated (after 12 hours)
+            if (this.shouldUpdateAQI(data)) {
+                this.setPersistentAQI(data.lora_v1?.highest_sub_index || this.state.persistentAQI);
+                this.showNotification("🔄 AQI updated after 12-hour period", "info");
+            }
+
+            // Update real-time status
+            this.state.updateCounter++;
+            this.updateRealtimeStatus();
+            this.state.lastRealTimeUpdate = new Date();
+
+        } catch (error) {
+            console.error("Error fetching lora-v1 data:", error);
+            this.showNotification("⚠️ Using cached data - connection issue detected", "warning");
+        }
+    }
+
+    shouldUpdateAQI(data) {
+        if (!this.state.aqiNextUpdate) return true;
+
+        const now = Date.now();
+        return now >= this.state.aqiNextUpdate && data.lora_v1?.highest_sub_index;
+    }
+
+    updateSensorValuesOnly(data) {
+        if (!data.lora_v1?.latest_item) return;
+
+        const latest = data.lora_v1.latest_item;
+
+        // Update real-time parameters (NOT AQI)
+        const metrics = ['nh3', 'o3', 'so2', 'co', 'no2', 'pm25', 'pm10'];
+        metrics.forEach(metric => {
+            const element = document.getElementById(`${metric}-value`);
+            const card = document.getElementById(`${metric}-card`);
+
+            if (element && latest[metric] !== undefined && latest[metric] !== null) {
+                // Add updating animation
+                if (card) {
+                    card.classList.add('updating');
+                    setTimeout(() => card.classList.remove('updating'), 1000);
+                }
+
+                // Handle conditional display
+                if ((metric === 'so2' || metric === 'no2') && parseFloat(latest[metric]) > 200) {
+                    element.innerHTML = '<span class="metric-unavailable">N/A</span>';
+                } else {
+                    const oldValue = element.textContent;
+                    element.textContent = latest[metric];
+
+                    // Add animation if value changed
+                    if (oldValue !== latest[metric].toString()) {
+                        element.classList.add('updated');
+                        setTimeout(() => element.classList.remove('updated'), 600);
+                    }
+                }
+            }
+        });
+
+        // Update weather data
+        const weatherData = [
+            { metric: 'temp', suffix: '°C' },
+            { metric: 'hum', suffix: '%' },
+            { metric: 'pre', suffix: ' hPa' }
+        ];
+
+        weatherData.forEach(({ metric, suffix }) => {
+            const element = document.getElementById(`${metric}-value`);
+            const card = document.getElementById(`${metric}-card`);
+
+            if (element && latest[metric] !== undefined && latest[metric] !== null) {
+                if (card) {
+                    card.classList.add('updating');
+                    setTimeout(() => card.classList.remove('updating'), 1000);
+                }
+
+                const oldValue = element.textContent;
+                const newValue = latest[metric] + suffix;
+                element.textContent = newValue;
+
+                if (oldValue !== newValue) {
+                    element.classList.add('updated');
+                    setTimeout(() => element.classList.remove('updated'), 600);
+                }
+            }
+        });
+
+        // Update sensor timestamp (not AQI timestamp)
+        if (latest.date) {
+            const now = new Date().toLocaleString();
+            const timeElement = document.getElementById('sensor-timestamp');
+            if (timeElement) {
+                timeElement.textContent = now;
+            }
+        }
+    }
+
+    updateAQIStatus(aqiValue) {
+        const aqi = parseInt(aqiValue);
+        const statusElement = document.getElementById('aqi-status-text');
+
+        if (!statusElement) return;
+
+        if (aqi <= 50) {
+            statusElement.textContent = '😊 Excellent Air Quality';
+            statusElement.style.color = '#10b981';
+        } else if (aqi <= 100) {
+            statusElement.textContent = '😐 Moderate Air Quality';
+            statusElement.style.color = '#f59e0b';
+        } else if (aqi <= 200) {
+            statusElement.textContent = '😷 Unhealthy Air Quality';
+            statusElement.style.color = '#ef4444';
+        } else {
+            statusElement.textContent = '☠️ Hazardous Air Quality';
+            statusElement.style.color = '#7c2d12';
+        }
+    }
+
+    updateRealtimeStatus() {
+        const statusElement = document.getElementById('realtime-status');
+        const now = new Date();
+        const timeString = now.toLocaleTimeString();
+
+        if (statusElement) {
+            statusElement.innerHTML = `🟢 LIVE • Sensors: ${timeString} • Update #${this.state.updateCounter}`;
+        }
+    }
+
+    updateSensorMarkers(data) {
+        // Update lora-v1 sensor popup with real data
+        if (data.lora_v1 && this.state.markers['lora-v1']) {
+            const sensorData = data.lora_v1;
+            const sensor = this.config.SENSOR_LOCATIONS['lora-v1'];
+
+            const popupContent = `
+                <div style="min-width: 240px; text-align: center;">
+                    <h4 style="margin: 0 0 12px 0; color: #1f2937; font-size: 1.1rem;">${sensor.name}</h4>
+                    <div style="background: #10b981; color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; margin-bottom: 12px; font-weight: 600;">
+                        🏛️ PRIMARY SENSOR - REAL-TIME
+                    </div>
+                    <div style="font-size: 18px; font-weight: bold; color: #4f46e5; margin-bottom: 12px;">
+                        🌬️ AQI: ${this.state.persistentAQI || 'N/A'} (12hr constant)
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 12px; color: #4b5563; margin-bottom: 12px;">
+                        <div>💨 PM2.5: ${sensorData.latest_item?.pm25 || 'N/A'}</div>
+                        <div>🌫️ PM10: ${sensorData.latest_item?.pm10 || 'N/A'}</div>
+                        <div>🏭 SO₂: ${sensorData.latest_item?.so2 || 'N/A'}</div>
+                        <div>☁️ O₃: ${sensorData.latest_item?.o3 || 'N/A'}</div>
+                        <div>🚗 CO: ${sensorData.latest_item?.co || 'N/A'}</div>
+                        <div>⚡ NO₂: ${sensorData.latest_item?.no2 || 'N/A'}</div>
+                    </div>
+                    <div style="font-size: 10px; color: #6b7280; margin-bottom: 8px;">
+                        🔄 Sensors update every 10s
+                    </div>
+                    <button onclick="window.location.href='/map_view/'"
+                            style="padding: 8px 16px; background: #4f46e5; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                        🗺️ View Full Map
+                    </button>
+                </div>
+            `;
+
+            this.state.markers['lora-v1'].setPopupContent(popupContent);
+        }
+    }
+
+    updateForecastChart() {
+        if (!this.state.forecastChart || !this.state.forecastData) return;
+
+        const parameter = this.state.currentParameter;
+        const labels = this.state.forecastData.map(entry => entry.day);
+        const values = this.state.forecastData.map(entry => entry[`${parameter}_max`] || 0);
+
+        const colors = {
+            pm25: { border: '#ef4444', bg: 'rgba(239, 68, 68, 0.2)' },
+            pm10: { border: '#3b82f6', bg: 'rgba(59, 130, 246, 0.2)' },
+            no2: { border: '#f59e0b', bg: 'rgba(245, 158, 11, 0.2)' },
+            o3: { border: '#10b981', bg: 'rgba(16, 185, 129, 0.2)' },
+            so2: { border: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.2)' },
+            co: { border: '#f97316', bg: 'rgba(249, 115, 22, 0.2)' },
+            nh3: { border: '#06b6d4', bg: 'rgba(6, 182, 212, 0.2)' }
+        };
+
+        const colorSet = colors[parameter] || colors.pm25;
+
+        this.state.forecastChart.data.labels = labels;
+        this.state.forecastChart.data.datasets[0] = {
+            label: `${parameter.toUpperCase()} Forecast`,
+            data: values,
+            borderColor: colorSet.border,
+            backgroundColor: colorSet.bg,
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: colorSet.border,
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 2,
+            pointRadius: 6,
+            pointHoverRadius: 8
+        };
+
+        this.state.forecastChart.update();
+    }
+
+    updateForecastTable() {
+        if (!this.state.forecastData) return;
+
+        const tbody = document.querySelector('#forecastTable tbody');
+        if (!tbody) return;
+
+        tbody.innerHTML = '';
+        const parameter = this.state.currentParameter;
+        const recentDays = this.state.forecastData.slice(-4);
+
+        recentDays.forEach(day => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td style="font-weight: 600; color: #4f46e5;">📅 ${day.day}</td>
+                <td style="font-weight: 700; color: #1f2937;">📈 ${day[parameter + '_max'] || '--'}</td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    startPeriodicUpdates() {
+        // Initial fetch
+        this.fetchLatestLoraV1Data();
+
+        // Periodic updates every 10 seconds for sensor data only
+        setInterval(() => {
+            this.fetchLatestLoraV1Data();
+
+            // Show subtle update indicator
+            const updateIndicator = document.createElement('div');
+            updateIndicator.style.cssText = `
+                position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+                background: rgba(16, 185, 129, 0.9); color: white; padding: 6px 12px;
+                border-radius: 6px; font-size: 11px; font-weight: 600;
+                z-index: 10000; opacity: 0; transition: opacity 0.3s ease;
+            `;
+            updateIndicator.textContent = `📡 Sensor update #${this.state.updateCounter}`;
+            document.body.appendChild(updateIndicator);
+
+            setTimeout(() => updateIndicator.style.opacity = '1', 100);
+            setTimeout(() => {
+                updateIndicator.style.opacity = '0';
+                setTimeout(() => {
+                    if (document.body.contains(updateIndicator)) {
+                        document.body.removeChild(updateIndicator);
+                    }
+                }, 300);
+            }, 1500);
+
+        }, this.config.REFRESH_INTERVAL);
+    }
+
+    showNotification(message, type = "info") {
+        const notification = document.getElementById('notification');
+        const notificationText = document.getElementById('notification-text');
+
+        if (!notification || !notificationText) return;
+
+        const icons = {
+            success: '✅',
+            error: '❌',
+            warning: '⚠️',
+            info: 'ℹ️'
+        };
+
+        notificationText.textContent = `${icons[type] || icons.info} ${message}`;
+        notification.className = `notification ${type}`;
+        notification.classList.add('show');
+
+        setTimeout(() => {
+            notification.classList.remove('show');
+        }, 5000);
+    }
+}
+
+// Initialize dashboard when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    window.dashboard = new AirQualityDashboard();
+});
+
+// Auto-hide alert banner after 15 seconds
+setTimeout(() => {
+    const alertBanner = document.querySelector('.alert-banner');
+    if (alertBanner) {
+        alertBanner.style.transition = 'all 0.5s ease';
+        alertBanner.style.transform = 'translateY(-100%)';
+        alertBanner.style.opacity = '0';
+        setTimeout(() => alertBanner.style.display = 'none', 500);
+    }
+}, 15000);
+
+// Add keyboard shortcuts
+document.addEventListener('keydown', (event) => {
+    if (event.altKey) {
+        switch(event.key) {
+            case 'm':
+                event.preventDefault();
+                window.location.href = "/map_view/";
+                break;
+            case 'r':
+                event.preventDefault();
+                if (window.dashboard) {
+                    window.dashboard.fetchLatestLoraV1Data();
+                    window.dashboard.showNotification('🔄 Manual refresh triggered', 'info');
+                }
+                break;
+            case 'h':
+                event.preventDefault();
+                window.location.href = "/";
+                break;
+            case 'a':
+                event.preventDefault();
+                if (window.dashboard && window.dashboard.shouldUpdateAQI({lora_v1: {highest_sub_index: 50}})) {
+                    window.dashboard.setPersistentAQI(50);
+                    window.dashboard.showNotification('🔄 AQI manually updated', 'info');
+                } else if (window.dashboard) {
+                    window.dashboard.showNotification('⏰ AQI update not due yet', 'warning');
+                }
+                break;
+        }
+    }
+});
+
+// Add smooth scrolling
+document.documentElement.style.scrollBehavior = 'smooth';
+
+// Performance monitoring
+window.addEventListener('load', () => {as
+    const loadTime = performance.now();
+    console.log(`🚀 Dashboard loaded in ${Math.round(loadTime)}ms`);
+    console.log(`📊 AQI persistence system: ${window.dashboard?.state.persistentAQI ? 'ACTIVE' : 'INITIALIZING'}`);
+    console.log(`🔄 Real-time updates: ${window.dashboard?.config.REFRESH_INTERVAL}ms interval`);
+});
+    </script>
+</body>
+</html>

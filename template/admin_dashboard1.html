@@ -1,0 +1,1912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sensor Stations Command Center</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #1abc9c;
+            --warning-color: #f39c12;
+            --critical-color: #e74c3c;
+            --normal-color: #2ecc71;
+            --dark-bg: #1a1d24;
+            --card-bg: #2c3440;
+            --card-border: #34495e;
+            --text-primary: #ecf0f1;
+            --text-secondary: #bdc3c7;
+            --chart-grid: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            font-family: 'Poppins', sans-serif;
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .main-wrapper {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            background-color: var(--primary-color);
+            padding: 1.5rem 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            box-shadow: 3px 0 10px rgba(0,0,0,0.2);
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-200px);
+            width: 50px;
+        }
+
+        .sidebar-header {
+            padding: 0.5rem 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar-logo {
+            height: 40px;
+            margin-right: 10px;
+        }
+
+        .sidebar-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+            white-space: nowrap;
+        }
+
+        .nav-item {
+            margin: 0.3rem 0;
+        }
+
+        .nav-link {
+            padding: 0.8rem 1.5rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--text-primary);
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .nav-icon {
+            margin-right: 15px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .nav-text {
+            white-space: nowrap;
+        }
+
+        .content-area {
+            grid-column: 2;
+            padding: 1.5rem;
+            margin-left: 50px;
+            transition: all 0.3s ease;
+        }
+
+        .content-area.expanded {
+            margin-left: 50px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .topbar-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-dropdown {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            background-color: var(--card-bg);
+            transition: all 0.3s ease;
+        }
+
+        .user-dropdown:hover {
+            background-color: var(--primary-color);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            margin-right: 10px;
+            background-color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .user-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .station-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 1px solid var(--card-border);
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .card-header {
+            padding: 1.25rem;
+            border-bottom: 1px solid var(--card-border);
+            background-color: rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .status-badge {
+            padding: 0.4rem 0.8rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-normal {
+            background-color: var(--normal-color);
+            color: white;
+        }
+
+        .status-warning {
+            background-color: var(--warning-color);
+            color: white;
+        }
+
+        .status-critical {
+            background-color: var(--critical-color);
+            color: white;
+        }
+
+        .card-body {
+            padding: 1.25rem;
+        }
+
+        .data-table {
+            width: 100%;
+            color: var(--text-primary);
+        }
+
+        .data-table th {
+            font-weight: 500;
+            color: var(--text-secondary);
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .data-table td {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .parameter-value {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+
+        .trend-indicator {
+            margin-left: 8px;
+            font-size: 0.8rem;
+        }
+
+        .trend-up {
+            color: var(--critical-color);
+        }
+
+        .trend-down {
+            color: var(--normal-color);
+        }
+
+        .value-normal {
+            color: var(--normal-color);
+        }
+
+        .value-warning {
+            color: var(--warning-color);
+        }
+
+        .value-critical {
+            color: var(--critical-color);
+        }
+
+        .gauge-chart {
+            position: relative;
+            width: 100%;
+            height: 120px;
+            margin: 1rem 0;
+        }
+
+        .gauge-chart canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            margin-top: 1rem;
+        }
+
+        .alert-container {
+
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .alert-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            background-color: rgba(0,0,0,0.2);
+            border-left: 4px solid var(--warning-color);
+        }
+
+        .alert-item.critical {
+            border-left-color: var(--critical-color);
+        }
+
+        .alert-icon {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.1);
+            margin-right: 1rem;
+        }
+
+        .alert-content {
+            flex-grow: 1;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .alert-message {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .alert-time {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            margin-left: 1rem;
+        }
+
+        .threshold-editor {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .threshold-parameter {
+            background-color: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .threshold-slider {
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+
+        .threshold-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 1rem;
+            gap: 0.5rem;
+        }
+
+        .footer {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--card-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .fixed-action-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 1000;
+        }
+
+        .action-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: var(--accent-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .action-menu {
+            position: absolute;
+            bottom: 70px;
+            right: 0;
+            display: none;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        /* Enhanced Tables for Users and Health Assessments */
+.data-card {
+    margin-left: 300px;
+    background-color: var(--card-bg);
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    overflow: hidden;
+    border: 1px solid var(--card-border);
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.data-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+}
+
+.data-card .card-header {
+    padding: 1.25rem;
+    background-color: rgba(0,0,0,0.2);
+    border-bottom: 1px solid var(--card-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.data-card .card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.data-card .card-title i {
+    margin-right: 0.75rem;
+    font-size: 1.1em;
+    color: var(--secondary-color);
+}
+
+.data-table {
+    width: 100%;
+    margin-bottom: 0;
+    margin-right: 0.75rem;
+}
+
+.data-table th {
+    background-color: rgba(0,0,0,0.2);
+    color: var(--text-secondary);
+    font-weight: 500;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    padding: 0.75rem 1rem;
+    border-bottom: 2px solid var(--card-border);
+}
+
+.data-table td {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    vertical-align: middle;
+}
+
+.data-table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.data-table tbody tr:hover {
+    background-color: rgba(52, 152, 219, 0.1);
+}
+
+.data-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.badge-count {
+    background-color: var(--secondary-color);
+    color: white;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 50px;
+    margin-left: 0.75rem;
+    font-weight: 600;
+}
+
+.health-score {
+    font-weight: 600;
+    padding: 0.35rem 0.75rem;
+    border-radius: 50px;
+    text-align: center;
+    display: inline-block;
+    min-width: 3rem;
+}
+
+.health-score-high {
+    background-color: var(--normal-color);
+    color: white;
+}
+
+.health-score-medium {
+    background-color: var(--warning-color);
+    color: white;
+}
+
+.health-score-low {
+    background-color: var(--critical-color);
+    color: white;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.action-button {
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    color: var(--text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.action-button:hover {
+    transform: translateY(-2px);
+}
+
+.action-button.view:hover {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.action-button.edit:hover {
+    background-color: var(--warning-color);
+    color: white;
+}
+
+.action-button.delete:hover {
+    background-color: var(--critical-color);
+    color: white;
+}
+
+.card-footer {
+    background-color: rgba(0,0,0,0.1);
+    border-top: 1px solid var(--card-border);
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.empty-state {
+    padding: 3rem 1rem;
+    text-align: center;
+}
+
+.empty-state-icon {
+    font-size: 3rem;
+    color: var(--card-border);
+    margin-bottom: 1rem;
+}
+
+.empty-state-text {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+}
+
+.table-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Modal styles */
+.custom-modal .modal-content {
+    background-color: var(--card-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--card-border);
+}
+
+.custom-modal .modal-header {
+    border-bottom: 1px solid var(--card-border);
+    background-color: rgba(0,0,0,0.2);
+}
+
+.custom-modal .modal-footer {
+    border-top: 1px solid var(--card-border);
+    background-color: rgba(0,0,0,0.1);
+}
+
+.info-section {
+    background-color: rgba(0,0,0,0.1);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.info-section h6 {
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.info-section .label {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.info-section .value {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.section-header i {
+    margin-right: 0.5rem;
+    color: var(--secondary-color);
+}
+
+        .action-item {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--card-bg);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-item:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .action-tooltip {
+            position: absolute;
+            right: 60px;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.5rem 0.8rem;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .action-item:hover .action-tooltip {
+            opacity: 1;
+            right: 65px;
+        }
+
+        .badge-sm {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+        }
+
+        .map-container {
+            height: 300px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        /* Animation for loading states */
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        .loading-pulse {
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        /* Custom toggle switch */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--accent-color);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        /* Responsive layout */
+        @media (max-width: 992px) {
+            .main-wrapper {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                transform: translateX(-250px);
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .content-area {
+                margin-left: 0;
+                grid-column: 1;
+            }
+
+            .station-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .threshold-editor {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Tooltip styles */
+        .custom-tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+
+        .tooltip-text {
+            visibility: hidden;
+            width: 200px;
+            background-color: var(--primary-color);
+            color: var(--text-primary);
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: var(--primary-color) transparent transparent transparent;
+        }
+
+        .custom-tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Dark mode toggle */
+        .mode-switch {
+            position: relative;
+            margin-right: 15px;
+        }
+
+        .mode-switch .fa-sun {
+            color: var(--warning-color);
+        }
+
+        .mode-switch .fa-moon {
+            color: var(--text-secondary);
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <div class="main-wrapper">
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i class="fas fa-broadcast-tower fa-2x text-info"></i>
+                </div>
+                <h1 class="sidebar-title">AQI Monitoring</h1>
+            </div>
+
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#">
+                        <span class="nav-icon"><i class="fas fa-tachometer-alt"></i></span>
+                        <span class="nav-text">Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        <span class="nav-icon"><i class="fas fa-wifi"></i></span>
+                        <span class="nav-text">Stations</span>
+                    </a>
+                </li>
+                <!--<li class="nav-item">
+                    <a class="nav-link" href="#">
+                        <span class="nav-icon"><i class="fas fa-chart-line"></i></span>
+                        <span class="nav-text">Analytics</span>
+                    </a>
+                </li>-->
+
+
+                <li class="nav-item">
+                    <a class="nav-link" href="#register">
+                        <span class="nav-icon"><i class="fas fa-sliders-h"></i></span>
+                        <span class="nav-text">Registered Users</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#healthassessment">
+                        <span class="nav-icon"><i class="fas fa-sliders-h"></i></span>
+                        <span class="nav-text">Health Assessments</span>
+                    </a>
+                </li>
+                 <li class="nav-item">
+                    <a class="nav-link" href="{% url 'forecast_history' %}">
+                        <span class="nav-icon"><i class="fas fa-sliders-h"></i></span>
+                        <span class="nav-text">Forecast History</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        <span class="nav-icon"><i class="fas fa-file-alt"></i></span>
+                        <span class="nav-text">Reports</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        <span class="nav-icon"><i class="fas fa-map-marked-alt"></i></span>
+                        <span class="nav-text">Map View</span>
+                    </a>
+                </li>
+                <li class="nav-item mt-5">
+                    <a class="nav-link" href="#">
+                        <span class="nav-icon"><i class="fas fa-cog"></i></span>
+                        <span class="nav-text">Settings</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        <span class="nav-icon"><i class="fas fa-question-circle"></i></span>
+                        <span class="nav-text">Help</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="content-area" id="content-area">
+            <!-- Top Navigation Bar -->
+            <div class="topbar">
+                <div class="d-flex align-items-center">
+                    <button id="toggle-sidebar" class="btn btn-outline-secondary me-3">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 class="topbar-title">Command Center</h1>
+                </div>
+                <div class="topbar-actions">
+                    <div class="mode-switch">
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked id="mode-toggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-bell"></i>
+                            <span class="badge rounded-pill bg-danger">3</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown">
+                            <li><h6 class="dropdown-header">Notifications</h6></li>
+                            <li><a class="dropdown-item" href="#">Critical alert: PM2.5 levels exceeded</a></li>
+                            <li><a class="dropdown-item" href="#">Station LoraV1 connectivity issues</a></li>
+                            <li><a class="dropdown-item" href="#">System update available</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-center" href="#">View all notifications</a></li>
+                        </ul>
+                    </div>
+                    <div class="user-dropdown ms-3" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <div class="user-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="user-name">Admin User</div>
+                        <i class="fas fa-chevron-down ms-2"></i>
+                    </div>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-user-circle me-2"></i> Profile</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i> Settings</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'admin_logout' %}"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- System Summary Cards -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                    <div class="dashboard-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h5 class="card-title">System Status</h5>
+                                    <p class="text-secondary mb-0">Current health</p>
+                                </div>
+                                <div class="status-badge status-warning">Warning</div>
+                            </div>
+                            <div class="d-flex align-items-center mt-3">
+                                <div class="display-4 me-3">
+                                    <i class="fas fa-heartbeat text-warning"></i>
+                                </div>
+                                <div>
+                                    <h2 class="mb-0">85%</h2>
+                                    <p class="mb-0 text-secondary">Overall Reliability</p>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-secondary">Uptime</span>
+                                    <span>99.2%</span>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: 99.2%" aria-valuenow="99.2" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                    <div class="dashboard-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h5 class="card-title">Active Stations</h5>
+                                    <p class="text-secondary mb-0">Connected sensors</p>
+                                </div>
+                                <div class="display-6">
+                                    <i class="fas fa-broadcast-tower text-info"></i>
+                                </div>
+                            </div>
+                            <h2 class="mb-3">2/5</h2>
+                            <div class="d-flex justify-content-between mb-2">
+                                <div>
+                                    <span class="d-block">Lora-v1</span>
+                                    <span class="badge bg-success badge-sm">ONLINE</span>
+                                </div>
+                                <div>
+                                    <span class="badge bg-secondary badge-sm">4h 32m</span>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <div>
+                                    <span class="d-block">Loradev2</span>
+                                    <span class="badge bg-success badge-sm">ONLINE</span>
+                                </div>
+                                <div>
+                                    <span class="badge bg-secondary badge-sm">2h 15m</span>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <span class="d-block">SensorHub3</span>
+                                    <span class="badge bg-danger badge-sm">OFFLINE</span>
+                                </div>
+                                <div>
+                                    <span class="badge bg-secondary badge-sm">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                    <div class="dashboard-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h5 class="card-title">Alerts</h5>
+                                    <p class="text-secondary mb-0">Last 24 hours</p>
+                                </div>
+                                <div class="display-6">
+                                    <i class="fas fa-bell text-warning"></i>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center mt-3">
+                                <div>
+                                    <h2 class="mb-0">5</h2>
+                                    <p class="mb-0 text-secondary">Total Alerts</p>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-danger">Critical</span>
+                                    <span>2</span>
+                                </div>
+                                <div class="progress mb-2" style="height: 8px;">
+                                    <div class="progress-bar bg-danger" role="progressbar" style="width: 40%" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-warning">Warning</span>
+                                    <span>3</span>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-warning" role="progressbar" style="width: 60%" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                    <div class="dashboard-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h5 class="card-title">Data Storage</h5>
+                                    <p class="text-secondary mb-0">System capacity</p>
+                                </div>
+                                <div class="display-6">
+                                    <i class="fas fa-database text-primary"></i>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center mt-3">
+                                <div>
+                                    <h2 class="mb-0">63%</h2>
+                                    <p class="mb-0 text-secondary">Used Space</p>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-secondary">300 MB / 1 TB</span>
+                                    <span></span>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-primary" role="progressbar" style="width: 63%" aria-valuenow="63" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <div class="d-flex justify-content-between mt-2">
+                                    <span class="text-secondary small">Daily growth: 2.3 GB</span>
+                                    <span class="text-secondary small">Est. full: 168 days</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sensor Stations Comparison -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h4 class="card-title">Sensor Network Overview</h4>
+                            <div class="d-flex align-items-center">
+                                <div class="custom-tooltip me-3">
+                                    <button class="btn btn-sm btn-outline-info">
+                                        <i class="fas fa-sync"></i> Auto-refresh
+                                    </button>
+                                    <div class="tooltip-text">Data automatically refreshes every 5 minutes</div>
+                                </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="timeframeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Last 24 hours
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="timeframeDropdown">
+                                        <li><a class="dropdown-item" href="#">Last 24 hours</a></li>
+                                        <li><a class="dropdown-item" href="#">Last 7 days</a></li>
+                                        <li><a class="dropdown-item" href="#">Last 30 days</a></li>
+                                        <li><a class="dropdown-item" href="#">Custom range</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+    <div class="station-grid">
+        <!-- Lora-v1 Station -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h5 class="card-title">Lora-v1 Station</h5>
+                <span class="status-badge status-normal">Active</span>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-3">
+                    <div>
+                        <span class="text-secondary">Signal</span>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-signal text-success me-2"></i>
+                            <span>Strong (92%)</span>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="text-secondary">Battery</span>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-battery-three-quarters text-success me-2"></i>
+                            <span>75%</span>
+                        </div>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Value</th>
+                        <th>Status</th>
+                    </tr>
+                    <tr>
+                        <td>PM2.5</td>
+                        <td id="lora-v1-pm25">{{ lora_v1.pm25|default:"N/A" }} μg/m³</td>
+                        <td><span class="badge bg-secondary">Loading...</span></td>
+                    </tr>
+                    <tr>
+                        <td>PM10</td>
+                        <td id="lora-v1-pm10">{{ lora_v1.pm10|default:"N/A" }} μg/m³</td>
+                        <td><span class="badge bg-secondary">Loading...</span></td>
+                    </tr>
+                    <tr>
+                        <td>O3</td>
+                        <td id="lora-v1-o3">{{ lora_v1.o3|default:"N/A" }} μg/m³</td>
+                        <td><span class="badge bg-secondary">Loading...</span></td>
+                    </tr>
+                    <tr>
+                        <td>NO2</td>
+                        <td id="lora-v1-no2">{{ lora_v1.no2|default:"N/A" }} μg/m³</td>
+                        <td><span class="badge bg-secondary">Loading...</span></td>
+                    </tr>
+                    <tr>
+                        <td>SO2</td>
+                        <td id="lora-v1-so2">{{ lora_v1.so2|default:"N/A" }} μg/m³</td>
+                        <td><span class="badge bg-secondary">Loading...</span></td>
+                    </tr>
+                    <tr>
+                        <td>NH3</td>
+                        <td id="lora-v1-nh3">{{ lora_v1.nh3|default:"N/A" }} μg/m³</td>
+                        <td><span class="badge bg-secondary">Loading...</span></td>
+                    </tr>
+                    <tr>
+                        <td>CO</td>
+                        <td id="lora-v1-co">{{ lora_v1.co|default:"N/A" }} μg/m³</td>
+                        <td><span class="badge bg-secondary">Loading...</span></td>
+                    </tr>
+                </table>
+                <div class="d-flex justify-content-end mt-3">
+                    <button class="btn btn-sm btn-outline-primary me-2">
+                        <i class="fas fa-chart-line"></i> Trends
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary me-2">
+                        <i class="fas fa-cog"></i> Configure
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger">
+                        <i class="fas fa-power-off"></i> Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- LoraDevv2 Station -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h5 class="card-title">LoraDevv2 Station</h5>
+                <span class="status-badge status-normal">Active</span>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-3">
+                    <div>
+                        <span class="text-secondary">Signal</span>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-signal text-warning me-2"></i>
+                            <span>Moderate (78%)</span>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="text-secondary">Battery</span>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-battery-full text-success me-2"></i>
+                            <span>92%</span>
+                        </div>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Value</th>
+                        <th>Status</th>
+                    </tr>
+                    <tr>
+                        <td>PM2.5</td>
+                        <td id="loradev2-pm25">{{ loradev2.pm25|default:"N/A" }} μg/m³</td>
+                        <td><span class="badge bg-secondary">Loading...</span></td>
+                    </tr>
+                    <tr>
+                        <td>PM10</td>
+                        <td id="loradev2-pm10">{{ loradev2.pm10|default:"N/A" }} μg/m³</td>
+                        <td><span class="badge bg-secondary">Loading...</span></td>
+                    </tr>
+                    <tr>
+                        <td>O3</td>
+                        <td id="loradev2-o3">{{ loradev2.o3|default:"N/A" }} μg/m³</td>
+                        <td><span class="badge bg-secondary">Loading...</span></td>
+                    </tr>
+                    <tr>
+                        <td>NO2</td>
+                        <td id="loradev2-no2">{{ loradev2.no2|default:"N/A" }} μg/m³</td>
+                      <td><span class="badge bg-secondary">Loading...</span></td>
+                    </tr>
+                    <tr>
+                        <td>SO2</td>
+                        <td id="loradev2-so2">{{ loradev2.so2|default:"N/A" }} μg/m³</td>
+                      <td><span class="badge bg-secondary">Loading...</span></td>
+                    </tr>
+                    <!--<tr>
+                        <td>NH3</td>
+                        <td id="loradev2-nh3">{{ loradev2.NH3|default:"N/A" }} μg/m³</td>
+                      <td><span class="badge bg-secondary">Loading...</span></td>
+                    </tr>
+                    <tr>
+                        <td>CO</td>
+                        <td id="loradev2-co">{{ loradev2.CO|default:"N/A" }} μg/m³</td>
+                      <td><span class="badge bg-secondary">Loading...</span></td>
+                    </tr>-->
+                </table>
+                <div class="d-flex justify-content-end mt-3">
+                    <button class="btn btn-sm btn-outline-primary me-2">
+                        <i class="fas fa-chart-line"></i> Trends
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary me-2">
+                        <i class="fas fa-cog"></i> Configure
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger">
+                        <i class="fas fa-power-off"></i> Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+                                        <div class="d-flex justify-content-end mt-3">
+                                            <button class="btn btn-sm btn-outline-primary me-2">
+                                                <i class="fas fa-chart-line"></i> Trends
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary me-2">
+                                                <i class="fas fa-cog"></i> Configure
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-power-off"></i> Reset
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+
+            <!-- Analytics and Alerts Section -->
+           <!-- Registered Users Section -->
+
+  <!-- Registered Users Section -->
+<div class="row mb-4" id="register">
+    <div class="col-12">
+        <div class="data-card">
+            <div class="card-header">
+                <h4 class="card-title"><i class="fas fa-users"></i> Registered Users <span class="badge-count">{{ users|length }}</span></h4>
+                <button class="btn btn-primary btn-sm">
+                    <i class="fas fa-user-plus me-1"></i> Add User
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-hashtag me-1"></i> ID</th>
+                                <th><i class="fas fa-user me-1"></i> Name</th>
+                                <th><i class="fas fa-phone-alt me-1"></i> Phone Number</th>
+                                <th><i class="fas fa-key me-1"></i> OTP</th>
+                                <th class="text-center"><i class="fas fa-cogs me-1"></i> Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td><strong>#{{ forloop.counter }}</strong></td>
+                                <td>{{ user.name }}</td>
+                                <td>{{ user.phone_number }}</td>
+                                <td>
+                                    {% if user.otp %}
+                                        <span class="badge bg-info">{{ user.otp }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">No OTP</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <a href="#" class="action-button view" title="View User">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="#" class="action-button edit" title="Edit User">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="#" class="action-button delete" title="Delete User">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5">
+                                    <div class="empty-state">
+                                        <div class="empty-state-icon">
+                                            <i class="fas fa-users-slash"></i>
+                                        </div>
+                                        <p class="empty-state-text">No users registered yet</p>
+                                        <button class="btn btn-primary">
+                                            <i class="fas fa-user-plus me-2"></i> Register First User
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-file-export me-1"></i> Export Users
+                </button>
+                <div class="table-actions">
+                    <button class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-envelope me-1"></i> Send Notification
+                    </button>
+                    <button class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-cog me-1"></i> Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    <!-- Health Assessments Section -->
+<!-- Health Assessments Section -->
+<div class="row mb-4" id="healthassessment">
+    <div class="col-12">
+        <div class="data-card">
+            <div class="card-header">
+                <h4 class="card-title"><i class="fas fa-heartbeat"></i> Health Assessments <span class="badge-count">{{ health_assessments|length }}</span></h4>
+                <button class="btn btn-info btn-sm">
+                    <i class="fas fa-plus-circle me-1"></i> New Assessment
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-hashtag me-1"></i> ID</th>
+                                <th><i class="fas fa-user me-1"></i> Username</th>
+                                <th><i class="fas fa-user-clock me-1"></i> Age Group</th>
+                                <th><i class="fas fa-venus-mars me-1"></i> Gender</th>
+                                <th><i class="fas fa-chart-bar me-1"></i> Score</th>
+                                <th><i class="fas fa-lungs me-1"></i> Respiratory</th>
+                                <th class="text-center"><i class="fas fa-cogs me-1"></i> Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for assessment in health_assessments %}
+                            <tr>
+                                <td><strong>#{{ forloop.counter }}</strong></td>
+                                <td>{{ assessment.username }}</td>
+                                <td>{{ assessment.age_group }}</td>
+                                <td>
+                                    {% if assessment.gender == 'Male' %}
+                                        <i class="fas fa-mars text-info me-1"></i>
+                                    {% elif assessment.gender == 'Female' %}
+                                        <i class="fas fa-venus text-danger me-1"></i>
+                                    {% else %}
+                                        <i class="fas fa-transgender text-warning me-1"></i>
+                                    {% endif %}
+                                    {{ assessment.gender }}
+                                </td>
+                                <td class="text-center">
+                                    {% if assessment.health_score > 70 %}
+                                        <span class="health-score health-score-high">{{ assessment.health_score }}</span>
+                                    {% elif assessment.health_score > 40 %}
+                                        <span class="health-score health-score-medium">{{ assessment.health_score }}</span>
+                                    {% else %}
+                                        <span class="health-score health-score-low">{{ assessment.health_score }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ assessment.respiratory_conditions|truncatechars:30 }}</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <a href="#" class="action-button view" title="View Details" data-bs-toggle="modal" data-bs-target="#assessmentModal{{ assessment.id }}">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="#" class="action-button edit" title="Edit Assessment">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="#" class="action-button delete" title="Delete Assessment">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7">
+                                    <div class="empty-state">
+                                        <div class="empty-state-icon">
+                                            <i class="fas fa-clipboard-list"></i>
+                                        </div>
+                                        <p class="empty-state-text">No health assessments found</p>
+                                        <button class="btn btn-info">
+                                            <i class="fas fa-plus-circle me-2"></i> Create First Assessment
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-file-export me-1"></i> Export Data
+                </button>
+                <div class="table-actions">
+                    <button class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-chart-pie me-1"></i> Analytics
+                    </button>
+                    <button class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-cog me-1"></i> Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Health Assessment Modal (Improved) -->
+{% for assessment in health_assessments %}
+<div class="modal fade custom-modal" id="assessmentModal{{ assessment.id }}" tabindex="-1" aria-labelledby="assessmentModalLabel{{ assessment.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="assessmentModalLabel{{ assessment.id }}">
+                    <i class="fas fa-heartbeat text-info me-2"></i>
+                    Health Assessment Report: {{ assessment.username }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-section">
+                            <div class="section-header">
+                                <i class="fas fa-user-circle"></i>
+                                <h6>Personal Information</h6>
+                            </div>
+                            <div class="mb-3">
+                                <div class="label">Age Group</div>
+                                <div class="value">{{ assessment.age_group }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="label">Gender</div>
+                                <div class="value">{{ assessment.gender }}</div>
+                            </div>
+                            <div>
+                                <div class="label">Health Score</div>
+                                <div class="value">
+                                    {% if assessment.health_score > 70 %}
+                                        <span class="health-score health-score-high">{{ assessment.health_score }}</span> Excellent
+                                    {% elif assessment.health_score > 40 %}
+                                        <span class="health-score health-score-medium">{{ assessment.health_score }}</span> Moderate
+                                    {% else %}
+                                        <span class="health-score health-score-low">{{ assessment.health_score }}</span> Concerning
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-section">
+                            <div class="section-header">
+                                <i class="fas fa-briefcase-medical"></i>
+                                <h6>Medical Information</h6>
+                            </div>
+                            <div class="mb-3">
+                                <div class="label">Smoking History</div>
+                                <div class="value">{{ assessment.smoking_history }}</div>
+                            </div>
+                            <div>
+                                <div class="label">Occupational Exposure</div>
+                                <div class="value">{{ assessment.occupational_exposure }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-section mt-3">
+                    <div class="section-header">
+                        <i class="fas fa-lungs"></i>
+                        <h6>Respiratory Conditions</h6>
+                    </div>
+                    <p>{{ assessment.respiratory_conditions }}</p>
+                </div>
+
+                <div class="info-section">
+                    <div class="section-header">
+                        <i class="fas fa-home"></i>
+                        <h6>Living Environment</h6>
+                    </div>
+                    <p>{{ assessment.living_environment }}</p>
+                </div>
+
+                <div class="info-section">
+                    <div class="section-header">
+                        <i class="fas fa-stethoscope"></i>
+                        <h6>Common Symptoms</h6>
+                    </div>
+                    <p>{{ assessment.common_symptoms }}</p>
+                </div>
+
+                <div class="info-section">
+                    <div class="section-header">
+                        <i class="fas fa-file-medical"></i>
+                        <h6>Medical History</h6>
+                    </div>
+                    <p>{{ assessment.medical_history }}</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">
+                    <i class="fas fa-file-pdf me-1"></i> Generate Report
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+   <div class="row justify-content-center"  style="margin-left:300px;">
+    <!-- Recent Alerts Card -->
+    <div class="col-lg-5 col-md-6 mb-4">
+
+
+    </div>
+
+    <!-- WHO Standards Card -->
+    <div class="col-lg-5 col-md-6 mb-4">
+
+</div>
+
+
+            <!-- Footer -->
+            <div class="footer">
+                <div>
+                    <span>&copy; 2025 SensorNet Environmental Monitoring</span>
+                </div>
+                <div>
+                    <span>System Version: 2.5.3</span> |
+                    <span>Last Updated: 2025-03-11 09:42:18 UTC</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <div class="fixed-action-btn">
+        <div class="action-btn" id="action-toggle">
+            <i class="fas fa-plus"></i>
+        </div>
+        <div class="action-menu" id="action-menu">
+            <div class="action-item">
+                <i class="fas fa-file-export"></i>
+                <div class="action-tooltip">Export Report</div>
+            </div>
+            <div class="action-item">
+                <i class="fas fa-sync"></i>
+                <div class="action-tooltip">Refresh Data</div>
+            </div>
+            <div class="action-item">
+                <i class="fas fa-bell"></i>
+                <div class="action-tooltip">View Alerts</div>
+            </div>
+            <div class="action-item">
+                <i class="fas fa-cog"></i>
+                <div class="action-tooltip">Settings</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notification-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;"></div>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+$(document).ready(function () {
+    // Updated WHO Air Quality Standards (2021)
+    const WHO_STANDARDS = {
+        // Values in μg/m³
+        pm25: {
+            normal: 5,      // Annual mean
+            daily: 15,      // 24-hour mean
+            warning: 15,    // Up to 3x guideline value
+            critical: 45    // Above 3x guideline value
+        },
+        pm10: {
+            normal: 15,     // Annual mean
+            daily: 45,      // 24-hour mean
+            warning: 45,    // Up to 3x guideline value
+            critical: 135   // Above 3x guideline value
+        },
+        o3: {
+            normal: 60,     // Peak season mean
+            warning: 180,   // Up to 3x guideline value
+            critical: 180   // Above 3x guideline value
+        },
+        no2: {
+            normal: 10,     // Annual mean
+            daily: 25,      // 24-hour mean
+            warning: 30,    // Up to 3x guideline value
+            critical: 75    // Above 3x guideline value
+        },
+        so2: {
+            normal: 40,     // 24-hour mean
+            warning: 120,   // Up to 3x guideline value
+            critical: 120   // Above 3x guideline value
+        },
+        co: {
+            normal: 4,      // 24-hour mean (mg/m³)
+            warning: 12,    // Up to 3x guideline value
+            critical: 12    // Above 3x guideline value
+        }
+    };
+
+    // Function to determine status based on parameter value
+    function determineStatus(parameter, value) {
+        if (value === null || value === undefined || isNaN(value)) {
+            return { status: 'Unknown', class: 'secondary' };
+        }
+
+        const standards = WHO_STANDARDS[parameter];
+        if (!standards) {
+            return { status: 'Unknown', class: 'secondary' };
+        }
+
+        // For CO, the value is in mg/m³, while others are in μg/m³
+        if (parameter === 'co') {
+            // If the displayed value is in μg/m³, convert to mg/m³ for comparison
+            if (value > 100) { // Assuming values > 100 are likely in μg/m³
+                value = value / 1000;
+            }
+        }
+
+        if (value <= standards.normal) {
+            return { status: 'Normal', class: 'success' };
+        } else if (value <= standards.warning) {
+            return { status: 'Warning', class: 'warning' };
+        } else {
+            return { status: 'Critical', class: 'danger' };
+        }
+    }
+
+    // Function to update status badges
+    function updateStatusBadges() {
+        // Update for all parameters in both stations
+        updateParameterStatus('pm25', '#lora-v1-pm25');
+        updateParameterStatus('pm10', '#lora-v1-pm10');
+        updateParameterStatus('o3', '#lora-v1-o3');
+        updateParameterStatus('no2', '#lora-v1-no2');
+        updateParameterStatus('so2', '#lora-v1-so2');
+
+        updateParameterStatus('pm25', '#loradev2-pm25');
+        updateParameterStatus('pm10', '#loradev2-pm10');
+        updateParameterStatus('o3', '#loradev2-o3');
+        updateParameterStatus('no2', '#loradev2-no2');
+        updateParameterStatus('so2', '#loradev2-so2');
+    }
+
+    // Helper function to update a single parameter's status
+    function updateParameterStatus(param, selector) {
+        const valueElement = $(selector);
+        const valueText = valueElement.text();
+        const value = parseFloat(valueText.replace(/[^\d.-]/g, ''));
+
+        const statusInfo = determineStatus(param, value);
+        const statusCell = valueElement.closest('tr').find('td:last-child');
+
+        statusCell.html(`<span class="badge bg-${statusInfo.class}">${statusInfo.status}</span>`);
+    }
+
+    // Initial status update
+    updateStatusBadges();
+
+    // Fetch sensor data and update status
+    function fetchLatestData() {
+    // Show loading state
+    $('.badge.bg-secondary').text('Loading...');
+
+    // Make an AJAX call to the backend
+    $.ajax({
+        url: window.location.pathname,  // Current URL path
+        type: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        success: function(data) {
+            // Update Lora-v1 data
+            if (data.lora_v1 && data.lora_v1.latest_item) {
+                $('#lora-v1-pm25').text((data.lora_v1.latest_item.pm25 || 'N/A') + 'μg/m³');
+                $('#lora-v1-pm10').text((data.lora_v1.latest_item.pm10 || 'N/A') + 'μg/m³');
+                $('#lora-v1-o3').text((data.lora_v1.latest_item.o3 || 'N/A') + ' μg/m³');
+                $('#lora-v1-no2').text((data.lora_v1.latest_item.no2 || 'N/A') + ' μg/m³');
+                $('#lora-v1-so2').text((data.lora-v1.latest_item.so2 || 'N/A') + ' μg/m³');
+                $('#lora-v1-nh3').text((data.lora-v1.latest_item.nh3 || 'N/A') + ' μg/m³');
+                $('#lora-v1-co').text((data.lora-v1.latest_item.co || 'N/A') + ' μg/m³');
+            }
+
+            // Update Loradev2 data
+            if (data.loradev2 && data.loradev2.latest_item) {
+                $('#loradev2-pm25').text((data.loradev2.latest_item.pm25 || 'N/A') + 'μg/m³');
+                $('#loradev2-pm10').text((data.loradev2.latest_item.pm10 || 'N/A') + 'μg/m³');
+                $('#loradev2-o3').text((data.loradev2.latest_item.o3 || 'N/A') + 'μg/m³');
+                $('#loradev2-no2').text((data.loradev2.latest_item.no2 || 'N/A') + 'μg/m³');
+                $('loradev2-so2).text((data.loradev2.latest_item.so2 || 'N/A') + 'μg/m³');
+                $('loradev2-nh3).text((data.loradev2.latest_item.nh3 || 'N/A') + 'μg/m³');
+                $('loradev2-co).text((data.loradev2.latest_item.co || 'N/A') + 'μg/m³');
+            }
+
+            // Update status badges after setting new values
+            updateStatusBadges();
+        },
+        error: function(xhr, status, error) {
+            console.error("Error fetching data:", error);
+        }
+    });
+}
+
+$(document).ready(function() {
+        fetchLatestData();  // Fetch the latest data on page load
+        setInterval(fetchLatestData, 5000);  // Fetch new data every 5 seconds
+    });
+
+    // Update WHO Standards display table to match actual standards used in the code
+    function updateWHOStandardsTable() {
+        const table = $('table.table-sm');
+        if (table.length) {
+            // Update PM2.5 row
+            table.find('tr:contains("PM2.5")').html(`
+                <td>PM2.5</td>
+                <td>≤ 5 (annual)<br>≤ 15 (24-hour)</td>
+                <td>5-15 (annual)<br>15-45 (24-hour)</td>
+                <td>> 15 (annual)<br>> 45 (24-hour)</td>
+                <td>μg/m³</td>
+            `);
+
+            // Update PM10 row
+            table.find('tr:contains("PM10")').html(`
+                <td>PM10</td>
+                <td>≤ 15 (annual)<br>≤ 45 (24-hour)</td>
+                <td>15-45 (annual)<br>45-135 (24-hour)</td>
+                <td>> 45 (annual)<br>> 135 (24-hour)</td>
+                <td>μg/m³</td>
+            `);
+
+            // Update O3 row
+            table.find('tr:contains("O3")').html(`
+                <td>O3</td>
+                <td>≤ 60 (peak season)</td>
+                <td>60-180 (peak season)</td>
+                <td>> 180 (peak season)</td>
+                <td>μg/m³</td>
+            `);
+
+            // Update NO2 row
+            table.find('tr:contains("NO2")').html(`
+                <td>NO2</td>
+                <td>≤ 10 (annual)<br>≤ 25 (24-hour)</td>
+                <td>10-30 (annual)<br>25-75 (24-hour)</td>
+                <td>> 30 (annual)<br>> 75 (24-hour)</td>
+                <td>μg/m³</td>
+            `);
+
+            // Update SO2 row
+            table.find('tr:contains("SO2")').html(`
+                <td>SO2</td>
+                <td>≤ 40 (24-hour)</td>
+                <td>40-120 (24-hour)</td>
+                <td>> 120 (24-hour)</td>
+                <td>μg/m³</td>
+            `);
+
+            // Update CO row
+            table.find('tr:contains("CO")').html(`
+                <td>CO</td>
+                <td>≤ 4 (24-hour)</td>
+                <td>4-12 (24-hour)</td>
+                <td>> 12 (24-hour)</td>
+                <td>mg/m³</td>
+            `);
+        }
+    }
+
+    // Update the WHO standards table
+    updateWHOStandardsTable();
+
+    // Periodic data refresh (every 10 seconds for demonstration)
+    setInterval(fetchLatestData, 10000);
+
+    // Sidebar toggle
+    $('#toggle-sidebar').on('click', function () {
+        $('#sidebar').toggleClass('collapsed');
+        $('#content-area').toggleClass('expanded');
+    });
+
+    // Other event handlers from the original code
+    $('#action-toggle').on('click', function () {
+        $('#action-menu').slideToggle();
+        $(this).find('i').toggleClass('fa-plus fa-times');
+    });
+
+    $('#mode-toggle').on('change', function () {
+        $('body').toggleClass('light-mode');
+    });
+});
+</script>
+
+</body>
+</html>

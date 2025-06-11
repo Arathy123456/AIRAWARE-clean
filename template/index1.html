@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+<head>
+  {% load static %}
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="{% static 'css/index1.css' %}" rel="stylesheet">
+  <!-- Use a CDN for static files -->
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-content">
+      <a href="#" class="navbar-brand">
+        <img src="{% static 'img/aqi.webp' %}" alt="AQM Logo">
+        AirAware
+      </a>
+
+      <div class="menu-toggle" onclick="toggleMenu()">
+        <i class="fas fa-bars"></i>
+      </div>
+
+      <ul class="nav-links">
+        <li><a href="" class="nav-link">Home</a></li>
+        <li><a href="#cities" class="nav-link">Cities</a></li>
+        <li><a href="#services" class="nav-link">Services</a></li>
+        <li><a href="#contact" class="nav-link">Contact</a></li>
+        <li><a href="{% url 'forecast_dashboard' %}" class="nav-link">Forecasting</a></li>
+
+        {% if username %}
+          <li class="nav-link">Hello, {{ username }}</li>
+          <li><a href="{% url 'logout' %}" class="nav-link login-btn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        {% else %}
+          <li><a href="{% url 'login' %}" class="nav-link login-btn"><i class="fas fa-sign-in-alt"></i> Login</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero-section" id="home">
+    <div class="hero-overlay"></div>
+    <div id="particles" class="particles"></div>
+    <div class="hero-content">
+      <h1 class="hero-title">Air Quality Monitoring</h1>
+      <p class="hero-subtitle">Live air quality updates and insights from Kaladi, Kerala</p>
+
+      <div class="aqi-display">
+        <div class="aqi-label">Current AQI • Last Updated: <span id="received-at">N/A</span></div>
+        <div class="aqi-value" id="aqi">{{ highest_sub_index }}</div>
+        <div class="aqi-status">AQI - GOOD</div>
+        <div class="aqi-icon">
+          <i class="fas fa-smile"></i>
+        </div>
+      </div>
+
+      <a href="{% url 'map_view' %}" class="cta-button">
+        <i class="fas fa-map-marked-alt"></i>
+        View Live AQI Map
+      </a>
+    </div>
+  </section>
+
+  <!-- Stats Section -->
+  <section class="stats-section">
+    <div class="stats-container">
+      <div class="section-header">
+        <h2 class="section-title">Kerala Air Quality Network</h2>
+        <p class="section-subtitle">Comprehensive monitoring across multiple locations for accurate air quality assessment</p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number">5</div>
+          <div class="stat-label">Monitoring Stations</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">24/7</div>
+          <div class="stat-label">Real-time Monitoring</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">6</div>
+          <div class="stat-label">Key Pollutants Tracked</div>
+        </div>
+        <!--<div class="stat-card">
+          <div class="stat-number">92%</div>
+          <div class="stat-label">Data Accuracy</div>
+        </div>-->
+      </div>
+    </div>
+  </section>
+
+  <!-- AQI Scale Section -->
+  <section class="section aqi-scale-section">
+    <div class="section-container">
+      <div class="section-header">
+        <h2 class="section-title">Understanding Air Quality Index</h2>
+        <p class="section-subtitle">Know what the AQI numbers mean for your health and daily activities</p>
+      </div>
+
+      <div class="aqi-scale-grid">
+        <div class="aqi-scale-item">
+          <div class="aqi-range">
+            <div class="aqi-color-indicator aqi-good"></div>
+            <div class="aqi-range-text">Good (0-50)</div>
+          </div>
+          <div class="aqi-description">
+            Air quality is satisfactory. Air pollution poses little or no risk for everyone.
+          </div>
+        </div>
+
+        <div class="aqi-scale-item">
+          <div class="aqi-range">
+            <div class="aqi-color-indicator aqi-moderate"></div>
+            <div class="aqi-range-text">Moderate (51-100)</div>
+          </div>
+          <div class="aqi-description">
+            Air quality is acceptable. However, sensitive individuals may experience minor issues.
+          </div>
+        </div>
+
+        <div class="aqi-scale-item">
+          <div class="aqi-range">
+            <div class="aqi-color-indicator aqi-unhealthy"></div>
+            <div class="aqi-range-text">Unhealthy (101-200)</div>
+          </div>
+          <div class="aqi-description">
+            Members of sensitive groups may experience health effects. Limit outdoor activities.
+          </div>
+        </div>
+
+        <div class="aqi-scale-item">
+          <div class="aqi-range">
+            <div class="aqi-color-indicator aqi-hazardous"></div>
+            <div class="aqi-range-text">Hazardous (201+)</div>
+          </div>
+          <div class="aqi-description">
+            Health alert: The risk of health effects is increased for everyone. Avoid outdoor activities.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cities Section -->
+  <section class="section cities-section" id="cities">
+    <div class="section-container">
+      <div class="section-header">
+        <h2 class="section-title">Monitoring Locations</h2>
+        <p class="section-subtitle">Air quality data from strategic locations across Ernakulam district</p>
+      </div>
+
+      <div class="cities-grid">
+        <div class="city-card">
+          <div class="city-icon">
+            <i class="fas fa-university"></i>
+          </div>
+          <a href="{% url 'map_view' %}" class="city-link">
+            <div class="city-name">Adi Shankara Institute</div>
+            <div class="city-type">Educational Institution</div>
+          </a>
+        </div>
+
+        <div class="city-card">
+          <div class="city-icon">
+            <i class="fas fa-city"></i>
+          </div>
+          <a href="{% url 'map_view' %}" class="city-link">
+            <div class="city-name">Matoor, Ernakulam</div>
+            <div class="city-type">Urban Area</div>
+          </a>
+        </div>
+
+        <div class="city-card">
+          <div class="city-icon">
+            <i class="fas fa-building"></i>
+          </div>
+          <a href="{% url 'map_view' %}" class="city-link">
+            <div class="city-name">Marotichodu Community Hall</div>
+            <div class="city-type">Community Center</div>
+          </a>
+        </div>
+
+        <div class="city-card">
+          <div class="city-icon">
+            <i class="fas fa-home"></i>
+          </div>
+          <a href="{% url 'map_view' %}" class="city-link">
+            <div class="city-name">Kaipatoor, Ernakulam</div>
+            <div class="city-type">Residential Area</div>
+          </a>
+        </div>
+
+        <div class="city-card">
+          <div class="city-icon">
+            <i class="fas fa-landmark"></i>
+          </div>
+          <a href="{% url 'map_view' %}" class="city-link">
+            <div class="city-name">Kalady Panchayat Office</div>
+            <div class="city-type">Government Office</div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Services Section -->
+  <section class="section services-section" id="services">
+    <div class="section-container">
+      <div class="section-header">
+        <h2 class="section-title">Our Services</h2>
+        <p class="section-subtitle">Advanced air quality solutions powered by cutting-edge technology</p>
+      </div>
+
+      <div class="services-grid">
+        <div class="service-card">
+          <div class="service-icon">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <h3 class="service-title">Personalized AQI Forecast</h3>
+          <p class="service-description">
+            Get accurate air quality predictions with advanced meteorological models and machine learning algorithms for better planning.
+          </p>
+          <a href="{% url 'risk_assessment' %}" class="service-button">
+            <i class="fas fa-arrow-right"></i>
+            Get Forecast
+          </a>
+        </div>
+
+        <div class="service-card">
+          <div class="service-icon">
+            <i class="fas fa-heartbeat"></i>
+          </div>
+          <h3 class="service-title">Health Risk Assessment</h3>
+          <p class="service-description">
+            Receive personalized health recommendations based on current air quality conditions and your individual health profile.
+          </p>
+          <a href="{% url 'risk_assessment' %}" class="service-button">
+            <i class="fas fa-arrow-right"></i>
+            Assess Risk
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer" id="contact">
+    <div class="footer-container">
+      <div class="footer-grid">
+        <div class="footer-section">
+          <h3>About AirQuality Kerala</h3>
+          <p class="footer-text">
+            Leading provider of real-time air quality monitoring solutions in Kerala, committed to environmental sustainability and public health awareness.
+          </p>
+          <div class="social-links">
+            <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+          </div>
+        </div>
+
+        <div class="footer-section">
+          <h3>Quick Links</h3>
+          <a href="#" class="footer-link">Home</a>
+          <a href="#cities" class="footer-link">Monitoring Stations</a>
+          <a href="#services" class="footer-link">Services</a>
+          <a href="{% url 'forecast_dashboard' %}" class="footer-link">Forecasting</a>
+          <a href="{% url 'logout' %}" class="footer-link">Logout</a>
+        </div>
+
+        <div class="footer-section">
+          <h3>Services</h3>
+          <a href="{% url 'risk_assessment' %}" class="footer-link">AQI Forecasting</a>
+          <a href="{% url 'risk_assessment' %}" class="footer-link">Health Risk Assessment</a>
+          <a href="{% url 'map_view' %}" class="footer-link">Live AQI Map</a>
+          <a href="#" class="footer-link">Data Analytics</a>
+          <a href="{% url 'admin_login' %}" class="footer-link">Admin Portal</a>
+        </div>
+
+        <div class="footer-section">
+          <h3>Contact Information</h3>
+          <p class="footer-text">
+            Vidya Bharathi Nagar, Mattoor<br>
+            Kalady 683574, Ernakulam<br>
+            Kerala, India
+          </p>
+          <br>
+          <p class="footer-text">
+            <strong>Email:</strong> aiiot@adishankara.ac.in<br>
+            <strong>Phone:</strong> 0484 246 3825
+          </p>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2025 AirQuality Kerala. All rights reserved. Developed by ASIET AI & IoT Lab.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="{% static 'js/index1.js' %}"></script>
+</body>
+</html>

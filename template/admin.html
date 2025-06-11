@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+     {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <title>Dashboard UI</title>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">AQI</div>
+        <input type="text" placeholder="Search for..." class="search-bar"/>
+        <nav>
+            <ul>
+                <li class="active">Dashboard</li>
+                <li><a href="#airQualityChart" style="text-decoration: none; color: inherit;">Data Representaion</a></li>
+
+              <!--  <li>Users</li>
+
+                <li>Authentication</li>
+                <li>Settings</li>-->
+
+            </ul>
+        </nav>
+        <div class="profile">
+            <img src="{% static 'img/asiet.jpeg' %}"    alt="Profile Picture"/>
+
+            <div>
+                <h3>AIIOT</h3>
+                <p>ASIET</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <header>
+             <h2>AIR QUALITY MONITORING SYSTEM</h2>
+             <!-- <p>Latest Data fetched on:<span id="fetch_date">{{ latest_date }}</span></p>
+              <p><span id="fetch_timestamp">{{ latest_time }}</span></p>-->
+            <div class="user-info">
+                <!--<img src="flag-icon.png" alt="Flag"/>-->
+                <img src="{% static 'img/DASHBOARD LOGO.jpg' %}"  style="height:50px;width:50px;border-radius: 70%;" alt="Notification"/>
+                <span>AQI</span>
+            </div>
+        </header>
+
+      <div class="cards">
+    <div class="card">
+        <h3>AIR QUALITY INDEX</h3>
+        <p>AQI: <span id="latest_aqi" style="font-size: 30px;">{{ highest_sub_index }}</span></p>
+    </div>
+    <div class="card">
+        <h3>TEMPERATURE</h3>
+        <p class="value" id="temp"> {{ latest_item.temp|default:"N/A" }} °C</p>
+    </div>
+    <div class="card">
+        <h3>HUMIDITY</h3>
+        <p class="value" id="hum">{{ latest_item.hum|default:"N/A" }} %</p>
+    </div>
+    <div class="card">
+        <h3>PRESSURE</h3>
+        <p class="value" id="pre">{{ latest_item.pre|default:"N/A" }}hpa</p>
+    </div>
+</div>
+
+<div class="cards">
+    <div class="card">
+        <div class="metric-card animate-float" style="display: flex; align-items: center;">
+            <h3 style="margin: 0;"></h3>
+            <i class="fa-light fa-flask" style="margin-left: 10px; font-size: 24px;"></i>
+        </div>
+        <p>NH3 Level: <span id="nh3" style="font-size: 30px;">{{ latest_item.nh3|default:"N/A" }} µg/m3</span></p>
+    </div>
+   <div class="card">
+    <div class="metric-card animate-float" style="display: flex; align-items: center;">
+        <h3 style="margin: 0;"></h3>
+        <i class="fas fa-cloud" style="margin-left: 10px; font-size: 24px;"></i> <!-- Use fas instead of fa-light -->
+    </div>
+    <p>O₃ Level: <span id="o3" style="font-size: 30px;">{{ latest_item.o3|default:"N/A" }}µg/m³</span></p>
+</div>
+    <div class="card">
+        <div class="metric-card animate-float" style="display: flex; align-items: center;">
+            <h3 style="margin: 0;"></h3>
+            <img src="{% static 'img/nh3.png' %}" alt="NH3 Image" class="card-image">
+        </div>
+<<<<<<< HEAD
+=======
+        <p>NH3 Level: <span id="nh3" style="font-size: 30px;">{{ latest_item.nh3|default:"N/A" }} µg/m3</span></p>
+    </div>
+    <div class="card">
+        <div class="header" style="display: flex; align-items: center;">
+            <h3 style="margin: 0;">O3</h3>
+            <img src="{% static 'img/ozone.png' %}" alt="Ozone Image" class="card-image">
+        </div>
+        <p>O3 Level: <span id="o3" style="font-size: 30px;">{{ latest_item.o3|default:"N/A" }}µg/m3</span></p>
+    </div>
+    <div class="card">
+        <div class="header" style="display: flex; align-items: center;">
+            <h3 style="margin: 0;">NO2</h3>
+            <img src="{% static 'img/nh3.png' %}" alt="NH3 Image" class="card-image">
+        </div>
+>>>>>>> 271ab73eec7ce325691cc439fbe40c5831b10894
+        <p>No2 Level: <span id="no2" style="font-size: 30px;">{{ latest_item.no2|default:"N/A" }} µg/m3</span></p>
+    </div>
+</div>
+
+<div class="cards">
+    <div class="card">
+        <div class="header" style="display: flex; align-items: center;">
+            <h3 style="margin: 0;"></h3>
+              <i class="fas fa-leaf" style="margin-left: 10px; font-size: 24px;"></i>
+        </div>
+<<<<<<< HEAD
+        <p>PM10 Level: <span id="pm10" style="font-size: 30px;">{{ latest_item.pm10|default:"N/A" }} µg/m3</span></p>
+=======
+        <p>PM10 Level: <span id="pm10" style="font-size: 30px;">{{ latest_item.pm10|default:"N/A" }}µg/m3</span></p>
+>>>>>>> 271ab73eec7ce325691cc439fbe40c5831b10894
+    </div>
+    <div class="card">
+        <div class="header" style="display: flex; align-items: center;">
+            <h3 style="margin: 0;">PM2.5</h3>
+            <img src="{% static 'img/pm25.png' %}" alt="PM2.5 Image" class="card-image">
+        </div>
+        <p>PM2.5 Level: <span id="pm25" style="font-size: 30px;">{{ latest_item.pm25|default:"N/A" }} µg/m3</span></p>
+    </div>
+    <div class="card">
+<<<<<<< HEAD
+        <h3></h3>
+        <i class="fa-solid fa-industry" style="margin-left: 10px; font-size: 24px;"></i>
+        <p>SO2 Level: <span id="so2" style="font-size: 30px;">{{ latest_item.so2|default:"N/A" }} µg/m3</span></p>
+=======
+        <h3>SO2</h3>
+        <p>SO2 Level: <span id="so2" style="font-size: 30px;">{{ latest_item.so2|default:"N/A" }}µg/m3</span></p>
+>>>>>>> 271ab73eec7ce325691cc439fbe40c5831b10894
+    </div>
+</div>
+
+    <br>
+        <div class="chart-section">
+    <!-- Chart 1 -->
+            <div>
+    <div class="chart">
+        <h3>NH3 Levels</h3>
+        <canvas id="nh3Chart"></canvas>
+    </div>
+    <br>
+    <!-- Chart 2 -->
+    <div class="chart">
+        <h3>PM10 Levels</h3>
+        <canvas id="pm10Chart"></canvas>
+    </div>
+                </div>
+<<<<<<< HEAD
+            <div>
+=======
+             <div>
+>>>>>>> 271ab73eec7ce325691cc439fbe40c5831b10894
+    <div class="chart">
+        <h3>No2 Levels</h3>
+        <canvas id="no2Chart"></canvas>
+    </div>
+    <br>
+    <!-- Chart 2 -->
+    <div class="chart">
+        <h3>PM25 Levels</h3>
+        <canvas id="pm25Chart"></canvas>
+    </div>
+<<<<<<< HEAD
+            </div>
+               <div>
+    <div class="chart">
+        <h3>O3 Levels</h3>
+        <canvas id="o3Chart"></canvas>
+    </div>
+    <br>
+    <!-- Chart 2 -->
+    <div class="chart">
+        <h3>SO2 Levels</h3>
+        <canvas id="so2Chart"></canvas>
+    </div>
+            </div>
+                <div>
+    <div class="chart">
+        <h3>Temperature</h3>
+         <canvas id="temperatureChart"></canvas>
+    </div>
+    <br>
+    <!-- Chart 2 -->
+    <div class="chart">
+        <h3>Humidity</h3>
+       <canvas id="humidityChart"></canvas>
+    </div>
+            </div>
+=======
+             </div>
+>>>>>>> 271ab73eec7ce325691cc439fbe40c5831b10894
+</div>
+
+
+
+        <div class="chart-section">
+            <div class="chart">
+                <h3>Data representations</h3>
+                <div class="donut-chart"></div>
+                <ul class="chart-details">
+                    <li><span class="dot purple"></span>Temperature {{ latest_temperature }}°C</li>
+                    <li><span class="dot blue"></span>Humidity {{ latest_humidity }}%</li>
+                    <li><span class="dot teal"></span>Pressure {{ latest_pressure }}mb</li>
+                </ul>
+            </div>
+
+    </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+<script>
+
+ function fetchLatestData() {
+    $.ajax({
+      url: "{% url 'admin_view' %}", // Ensure the URL matches your Django URL configuration
+      type: "GET",
+      dataType: "json",
+      headers: { "X-Requested-With": "XMLHttpRequest" }, // Indicate it's an AJAX request
+      success: function(data) {
+        console.log("AJAX success:", data); // Debugging
+        if (data.latest_item) {
+          updateAqiContainer(data.latest_item);
+        } else {
+          console.error("No data found in response.");
+        }
+      },
+      error: function(xhr, status, error) {
+        console.error("AJAX error:", error);
+      }
+    });
+  }
+
+  // Function to update AQI container
+  function updateAqiContainer(latestItem) {
+    $('#received-at').text(latestItem.received_at || 'N/A');
+<<<<<<< HEAD
+=======
+
+>>>>>>> 271ab73eec7ce325691cc439fbe40c5831b10894
+    $('#nh3').text(latestItem.nh3 || 'N/A' );
+    $('#o3').text(latestItem.o3 || 'N/A');
+    $('#so2').text(latestItem.so2 || 'N/A');
+    $('#co').text(latestItem.co || 'N/A');
+    $('#no2').text(latestItem.no2 || 'N/A');
+    $('#pm10').text(latestItem.pm10 || 'N/A');
+    $('#pm25').text(latestItem.pm25 || 'N/A');
+    $('#date').text(latestItem.date || 'N/A');
+    $('#temp').text((latestItem.temp ? latestItem.temp + ' °C' : 'N/A'));
+    $('#hum').text((latestItem.hum ? latestItem.hum + ' %' : 'N/A'));
+    $('#pre').text((latestItem.pre ? latestItem.pre + ' hPa' : 'N/A'));
+
+
+    const aqiValue = parseInt(latestItem.aqi || 0, 10);
+    const aqiStatusElement = $('.aqi-status');
+    const aqiIconElement = $('.aqi-container i');
+
+    if (aqiValue <= 50) {
+      aqiStatusElement.text('AQI - GOOD');
+      aqiIconElement.attr('class', 'fas fa-smile').css('color', '#2ecc71');
+    } else if (aqiValue <= 100) {
+      aqiStatusElement.text('AQI - MODERATE');
+      aqiIconElement.attr('class', 'fas fa-meh').css('color', '#f1c40f');
+    } else {
+      aqiStatusElement.text('AQI - POOR');
+      aqiIconElement.attr('class', 'fas fa-frown').css('color', '#e74c3c');
+    }
+  }
+
+  // Fetch data every 5 seconds
+<<<<<<< HEAD
+  setInterval(fetchLatestData, 600000);
+
+  // Fetch data on page load
+  $(document).ready(function() {
+    initializeCharts();
+    fetchLatestData();
+    setInterval(fetchLatestData, 600000);
+});
+
+let pm10Chart, nh3Chart, no2Chart, o3Chart, pm25Chart, so2Chart, temperatureChart, humidityChart;
+
+function initializeCharts() {
+    const chartConfig = (ctx, label, color) => new Chart(ctx, {
+        type: 'doughnut', // Changed to line chart for better visualization
+        data: {
+            labels: [], // Empty initially
+            datasets: [{
+                label: label,
+                data: [],
+                backgroundColor: color,
+                borderColor: color,
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: { title: { display: false, text: 'Time' } },
+                y: { beginAtZero: true, title: { display: true, text: label } }
+            }
+        }
+    });
+
+    pm10Chart = chartConfig(document.getElementById("pm10Chart"), "PM10 Levels", "blue");
+    nh3Chart = chartConfig(document.getElementById("nh3Chart"), "NH3 Levels", "orange");
+    no2Chart = chartConfig(document.getElementById("no2Chart"), "NO2 Levels", "purple");
+    o3Chart = chartConfig(document.getElementById("o3Chart"), "O3 Levels", "red");
+    pm25Chart = chartConfig(document.getElementById("pm25Chart"), "PM2.5 Levels", "brown");
+    so2Chart = chartConfig(document.getElementById("so2Chart"), "SO2 Levels", "yellow");
+    temperatureChart = chartConfig(document.getElementById("temperatureChart"), "Temperature (°C)", "cyan");
+    humidityChart = chartConfig(document.getElementById("humidityChart"), "Humidity (%)", "pink");
+}
+
+function fetchLatestData() {
+    $.ajax({
+        url: "{% url 'admin_view' %}", // Ensure this URL is correct
+        type: "GET",
+        dataType: "json",
+        success: function(data) {
+            if (data.latest_item) {
+                updateCharts(data.latest_item);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error("AJAX error:", error);
+        }
+    });
+}
+
+function updateCharts(latestItem) {
+    const updateChartData = (chart, newValue) => {
+        const now = new Date().toLocaleTimeString();
+        chart.data.labels.push(now);
+        chart.data.datasets[0].data.push(newValue);
+
+        if (chart.data.labels.length > 4) { // Limit data points to last 10 entries
+            chart.data.labels.shift();
+            chart.data.datasets[0].data.shift();
+        }
+
+        chart.update();
+    };
+
+    updateChartData(pm10Chart, latestItem.pm10 || 0);
+    updateChartData(nh3Chart, latestItem.nh3 || 0);
+    updateChartData(no2Chart, latestItem.no2 || 0);
+    updateChartData(o3Chart, latestItem.o3 || 0);
+    updateChartData(pm25Chart, latestItem.pm25 || 0);
+    updateChartData(so2Chart, latestItem.so2 || 0);
+    updateChartData(temperatureChart, latestItem.temp || 0);
+    updateChartData(humidityChart, latestItem.hum || 0);
+}
+=======
+  setInterval(fetchLatestData, 5000);
+
+  // Fetch data on page load
+  $(document).ready(function() {
+    fetchLatestData();
+  });
+
+
+    let pm10Chart, aqiChart, nh3Chart, no2Chart, o3Chart, pm25Chart, so2Chart, temperatureChart, humidityChart;
+
+  function initializeCharts() {
+      const chartConfig = (ctx, label, color) => new Chart(ctx, {
+          type: 'line',
+          data: {
+              labels: ["Now"],
+              datasets: [{
+                  label: label,
+                  data: [0], // Initial dummy value
+                  backgroundColor: color,
+                  borderColor: color,
+                  borderWidth: 2
+              }]
+          },
+          options: {
+              responsive: true,
+              scales: {
+                  y: { beginAtZero: true }
+              }
+          }
+      });
+
+      pm10Chart = chartConfig(document.getElementById("pm10Chart"), "PM10", "blue");
+      aqiChart = chartConfig(document.getElementById("aqiChart"), "AQI", "green");
+      nh3Chart = chartConfig(document.getElementById("nh3Chart"), "NH3", "orange");
+      no2Chart = chartConfig(document.getElementById("no2Chart"), "NO2", "purple");
+      o3Chart = chartConfig(document.getElementById("o3Chart"), "O3", "red");
+      pm25Chart = chartConfig(document.getElementById("pm25Chart"), "PM2.5", "brown");
+      so2Chart = chartConfig(document.getElementById("so2Chart"), "SO2", "yellow");
+      temperatureChart = chartConfig(document.getElementById("temperatureChart"), "Temperature", "cyan");
+      humidityChart = chartConfig(document.getElementById("humidityChart"), "Humidity", "pink");
+  }
+
+  function fetchLatestData() {
+      $.ajax({
+          url: "{% url 'admin_view' %}",
+          type: "GET",
+          dataType: "json",
+          success: function(data) {
+              if (data.latest_item) {
+                  updateCharts(data.latest_item);
+              }
+          },
+          error: function(xhr, status, error) {
+              console.error("AJAX error:", error);
+          }
+      });
+  }
+
+  function updateCharts(latestItem) {
+      const updateChartData = (chart, newValue) => {
+          chart.data.labels.push(new Date().toLocaleTimeString());
+          chart.data.datasets[0].data.push(newValue);
+          if (chart.data.labels.length > 10) { // Keep only 10 data points
+              chart.data.labels.shift();
+              chart.data.datasets[0].data.shift();
+          }
+          chart.update();
+      };
+
+      updateChartData(pm10Chart, latestItem.pm10 || 0);
+      updateChartData(aqiChart, latestItem.aqi || 0);
+      updateChartData(nh3Chart, latestItem.nh3 || 0);
+      updateChartData(no2Chart, latestItem.no2 || 0);
+      updateChartData(o3Chart, latestItem.o3 || 0);
+      updateChartData(pm25Chart, latestItem.pm25 || 0);
+      updateChartData(so2Chart, latestItem.so2 || 0);
+      updateChartData(temperatureChart, latestItem.temp || 0);
+      updateChartData(humidityChart, latestItem.hum || 0);
+  }
+
+  $(document).ready(function() {
+      initializeCharts();
+      fetchLatestData();
+      setInterval(fetchLatestData, 5000);
+  });
+
+>>>>>>> 271ab73eec7ce325691cc439fbe40c5831b10894
+
+
+</script>
+</div>
+
+
+
+
+</body>
+</html>

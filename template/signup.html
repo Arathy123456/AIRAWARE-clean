@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Air Quality Monitor</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+</head>
+<style>
+    /* Variables */
+ :root {
+            --primary: #1a4f7a;
+            --primary-light: #2980b9;
+            --success: #2ecc71;
+            --success-dark: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f1c40f;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a4f7a, #2980b9);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .gradient-bg {
+            width: 100%;
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        /* Particle Animation */
+        .particles {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 4s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-20px) scale(1.1); }
+        }
+
+        .signup-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            transform: translateY(0);
+            transition: var(--transition);
+            animation: cardAppear 0.6s ease-out;
+        }
+
+        @keyframes cardAppear {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .signup-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .gradient-header {
+            background: linear-gradient(45deg, var(--primary), var(--primary-light));
+            padding: 2rem !important;
+            border: none;
+        }
+
+        .gradient-header h2 {
+            font-size: 2rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group {
+            border-radius: 12px;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .input-group:focus-within {
+            box-shadow: 0 0 0 3px rgba(41, 128, 185, 0.2);
+        }
+
+        .input-group-text {
+            background: transparent;
+            border: 2px solid #e1e8ed;
+            border-right: none;
+            padding: 0.7rem 1rem;
+            color: var(--primary);
+        }
+
+        .form-control {
+            border: 2px solid #e1e8ed;
+            border-left: none;
+            padding: 0.7rem 1rem;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            box-shadow: none;
+            border-color: #e1e8ed;
+        }
+
+        .input-group:focus-within .input-group-text,
+        .input-group:focus-within .form-control {
+            border-color: var(--primary-light);
+        }
+
+        .signup-btn {
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            border: none;
+            padding: 1rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .signup-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(transparent, rgba(255, 255, 255, 0.2), transparent);
+            transform: rotate(45deg);
+            transition: 0.5s;
+        }
+
+        .signup-btn:hover::after {
+            left: 100%;
+        }
+
+        .signup-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(41, 128, 185, 0.3);
+        }
+
+        .card-footer {
+            background: transparent;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            padding: 1.5rem !important;
+        }
+
+        .card-footer a {
+            color: var(--primary-light);
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .card-footer a:hover {
+            color: var(--primary);
+            text-decoration: none !important;
+            transform: translateX(3px);
+        }
+
+        /* Success Animation */
+        @keyframes success-appear {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .success-icon {
+            display: none;
+            color: var(--success);
+            animation: success-appear 0.3s ease-out;
+        }
+
+        .success-icon.show {
+            display: inline-block;
+        }
+
+        /* Validation Styles */
+        .form-control.is-valid,
+        .was-validated .form-control:valid {
+            border-color: var(--success) !important;
+            background-image: none;
+        }
+
+        .form-control.is-invalid,
+        .was-validated .form-control:invalid {
+            border-color: var(--danger) !important;
+            background-image: none;
+        }
+
+        /* Loading Animation */
+        .spinner-border {
+            width: 1.5rem;
+            height: 1.5rem;
+            vertical-align: middle;
+        }
+
+        @media (max-width: 576px) {
+            .signup-card {
+                margin: 1rem;
+            }
+
+            .gradient-header {
+                padding: 1.5rem !important;
+            }
+
+            .gradient-header h2 {
+                font-size: 1.75rem;
+            }
+
+            .form-control, .input-group-text {
+                padding: 0.6rem 0.8rem;
+            }
+        }
+</style>
+<body class="gradient-bg">
+    <div class="container">
+        <div class="row justify-content-center min-vh-100 align-items-center">
+            <div class="col-11 col-sm-8 col-md-6 col-lg-5">
+                <div class="card signup-card">
+                    <!-- Card Header -->
+                    <div class="card-header text-center p-4 gradient-header">
+                        <h2 class="text-white mb-0">Sign Up</h2>
+                    </div>
+
+                    <!-- Card Body -->
+                    <div class="card-body p-4">
+                        <form  method="POST" id="signupForm" class="needs-validation" novalidate>
+                             {% csrf_token %}
+                            <!-- Name Input -->
+                            <div class="form-group mb-4 position-relative">
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-transparent border-end-0">
+                                        <i class="fas fa-user"></i>
+                                    </span>
+                                    <input type="text" class="form-control border-start-0" id="name"  name="name"
+                                           placeholder="Name" required>
+                                </div>
+                                <div class="invalid-feedback">
+                                    Please enter your name
+                                </div>
+                            </div>
+
+                            <!-- Phone Input -->
+                            <div class="form-group mb-4">
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-transparent border-end-0">
+                                        <i class="fas fa-phone"></i>
+                                    </span>
+                                    <input type="tel" class="form-control border-start-0" id="phone" name="phone_number"
+                                           placeholder="+91XXXXXXXXXX" required>
+                                </div>
+                                <div class="invalid-feedback">
+                                    Please enter a valid phone number
+                                </div>
+                            </div>
+
+
+
+                            <!-- Password Input -->
+
+                            <!-- Submit Button -->
+                            <div class="d-grid gap-2 mt-5">
+                                <button type="submit" class="btn btn-primary btn-lg signup-btn">
+                                    <span class="btn-text">Register</span>
+                                    <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Card Footer -->
+                    <div class="card-footer text-center">
+                            <p class="mb-0">
+                                Already have an account?
+                                <a href="{% url 'login' %}">
+                                    <i class="fas fa-sign-in-alt me-1"></i>Login
+                                </a>
+                            </p>
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+
+</body>
+</html>

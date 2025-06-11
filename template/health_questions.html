@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Assessment Questionnaire</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --primary-light: #4895ef;
+            --secondary-color: #4cc9f0;
+            --warning-color: #f72585;
+            --text-color: #2b2d42;
+            --bg-color: #f8f9fa;
+            --card-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            --transition-speed: 0.3s;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%234361ee' fill-opacity='0.05'%3E%3Cpath opacity='.5' d='M96 95h4v1h-4v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9zm-1 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9z'/%3E%3Cpath d='M6 5V0H5v5H0v1h5v94h1V6h94V5H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2.5rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: var(--card-shadow);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+            opacity: 0.3;
+        }
+
+        .header h1 {
+            margin-bottom: 1rem;
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            position: relative;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 1rem;
+        }
+
+        .progress-container {
+            background: white;
+            padding: 1.8rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: var(--card-shadow);
+            transition: all var(--transition-speed) ease;
+        }
+
+        .progress-container:hover {
+            transform: translateY(-3px);
+        }
+
+        .progress-stats {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-color);
+            font-size: 1rem;
+            font-weight: 500;
+            margin-bottom: 0.7rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background-color: rgba(0, 0, 0, 0.05);
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 0.5rem 0 1rem 0;
+            position: relative;
+        }
+
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border-radius: 15px;
+            transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .question {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 25px;
+            display: none;
+            border-left: 5px solid var(--primary-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .question:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, transparent 50%, rgba(67, 97, 238, 0.05) 50%);
+            border-radius: 0 0 0 100px;
+        }
+
+        .question.active {
+            display: block;
+            animation: fadeInUp 0.5s ease-out forwards;
+        }
+
+        .question h3 {
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .question h3 i {
+            color: var(--primary-color);
+            background-color: rgba(67, 97, 238, 0.1);
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option {
+            padding: 15px;
+            border: 2px solid #eaeaea;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .option:hover {
+            background-color: rgba(67, 97, 238, 0.05);
+            border-color: var(--primary-light);
+            transform: translateY(-2px);
+        }
+
+        .option input[type="radio"],
+        .checkbox-option input[type="checkbox"] {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+
+        .option label {
+            flex-grow: 1;
+            cursor: pointer;
+            padding-left: 35px;
+            position: relative;
+        }
+
+        .option label:before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+
+        .option input[type="radio"]:checked + label:before {
+            border-color: var(--primary-color);
+            background-color: white;
+        }
+
+        .option input[type="radio"]:checked + label:after {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            transition: all 0.2s ease;
+        }
+
+        .option.selected {
+            background-color: rgba(67, 97, 238, 0.1);
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(67, 97, 238, 0.15);
+        }
+
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border: 2px solid #eaeaea;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .checkbox-option:hover {
+            background-color: rgba(67, 97, 238, 0.05);
+            border-color: var(--primary-light);
+            transform: translateY(-2px);
+        }
+
+        .checkbox-option label {
+            flex-grow: 1;
+            cursor: pointer;
+            padding-left: 35px;
+            position: relative;
+        }
+
+        .checkbox-option label:before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            transition: all 0.2s ease;
+        }
+
+        .checkbox-option input[type="checkbox"]:checked + label:before {
+            border-color: var(--primary-color);
+            background-color: var(--primary-color);
+        }
+
+        .checkbox-option input[type="checkbox"]:checked + label:after {
+            content: '✓';
+            position: absolute;
+            left: 5px;
+            top: 50%;
+            transform: translateY(-60%);
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 25px;
+            gap: 15px;
+        }
+
+        .nav-button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .prev-button {
+            background-color: #f8f9fa;
+            color: var(--text-color);
+            border: 1px solid #e0e0e0;
+        }
+
+        .prev-button:hover {
+            background-color: #e9ecef;
+            transform: translateY(-2px);
+        }
+
+        .next-button {
+            background-color: var(--primary-color);
+            color: white;
+            flex-grow: 1;
+        }
+
+        .next-button:hover {
+            background-color: var(--primary-light);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(67, 97, 238, 0.2);
+        }
+
+        .submit-button {
+            background-color: var(--warning-color);
+            color: white;
+            flex-grow: 1;
+        }
+
+        .submit-button:hover {
+            background-color: #e5007e;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(247, 37, 133, 0.3);
+        }
+
+        .back-button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 22px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 25px;
+            text-decoration: none;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            z-index: 10;
+            position: relative;
+            min-width: 180px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .back-button:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            color: white;
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        #result {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+            margin-top: 2rem;
+            display: none;
+            animation: fadeIn 0.5s ease;
+            border-top: 5px solid var(--primary-color);
+            text-align: center;
+        }
+
+        #result h2 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        #result p {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .error-message {
+            color: var(--warning-color);
+            font-size: 0.9rem;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: rgba(247, 37, 133, 0.1);
+            border-radius: 8px;
+            display: none;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+                margin: 1rem auto;
+            }
+
+            .header, .question, .progress-container {
+                padding: 1.5rem;
+                border-radius: 10px;
+            }
+
+            .option, .checkbox-option {
+                padding: 12px;
+            }
+
+            .nav-button {
+                padding: 10px 18px;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Health score result styling */
+        .health-score-container {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            margin: 1.5rem auto;
+        }
+
+        .score-circle {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(
+                var(--primary-color) 0%,
+                #f8f9fa 0%
+            );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 0 15px rgba(67, 97, 238, 0.2);
+        }
+
+        .score-inner-circle {
+            width: 80%;
+            height: 80%;
+            background-color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        /* Fancy checkbox and radio styling - keeping IDs/classes the same */
+        #healthAssessment {
+            position: relative;
+        }
+
+        #progressText {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+       <div class="header">
+        <h1><i class="fas fa-notes-medical"></i> Health Assessment Questionnaire</h1>
+        <p>Hello, {{ username }}! Let's evaluate your health status.</p>
+
+        <!-- Centered Back to Dashboard button with new styling -->
+        <div class="back-button-container">
+            <a href="{% url 'risk_assessment'  %}"  class="back-button">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+       </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-container">
+            <div class="progress-stats">
+                <span>Your Progress</span>
+                <span id="progressText">0/8 Questions</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress" style="width: 0%"></div>
+            </div>
+        </div>
+
+
+       <form action="{% url 'health_questions' username=username %}" id="healthAssessment" method="POST">
+    {% csrf_token %}
+
+    <!-- Question 1: Age Group -->
+    <div id="question1" class="question active">
+        <h3><i class="fas fa-user-clock"></i> What is your age group?</h3>
+        <div class="options">
+            <div class="option">
+                <input type="radio" id="age-0-12" name="age_group" value="0-12 years">
+                <label for="age-0-12">0-12 years</label>
+            </div>
+            <div class="option">
+                <input type="radio" id="age-13-18" name="age_group" value="13-18 years">
+                <label for="age-13-18">13-18 years</label>
+            </div>
+            <div class="option">
+                <input type="radio" id="age-19-40" name="age_group" value="19-40 years">
+                <label for="age-19-40">19-40 years</label>
+            </div>
+            <div class="option">
+                <input type="radio" id="age-41-60" name="age_group" value="41-60 years">
+                <label for="age-41-60">41-60 years</label>
+            </div>
+            <div class="option">
+                <input type="radio" id="age-61-plus" name="age_group" value="61 years and above">
+                <label for="age-61-plus">61 years and above</label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Question 2: Gender -->
+    <div id="question2" class="question">
+        <h3><i class="fas fa-venus-mars"></i> What is your gender?</h3>
+        <div class="options">
+            <div class="option">
+                <input type="radio" id="gender-male" name="gender" value="Male">
+                <label for="gender-male">Male</label>
+            </div>
+            <div class="option">
+                <input type="radio" id="gender-female" name="gender" value="Female">
+                <label for="gender-female">Female</label>
+            </div>
+            <div class="option">
+                <input type="radio" id="gender-other" name="gender" value="Other">
+                <label for="gender-other">Other</label>
+            </div>
+            <div class="option">
+                <input type="radio" id="gender-prefer-not" name="gender" value="Prefer not to say">
+                <label for="gender-prefer-not">Prefer not to say</label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Question 3: Respiratory Conditions -->
+    <div id="question3" class="question">
+        <h3><i class="fas fa-lungs"></i> Do you have any respiratory conditions?</h3>
+        <div class="options checkbox-group" required>
+            <div class="checkbox-option">
+                <input type="checkbox" id="asthma" name="respiratory_conditions" value="Asthma">
+                <label for="asthma">Asthma</label>
+            </div>
+            <div class="checkbox-option">
+                <input type="checkbox" id="copd" name="respiratory_conditions" value="COPD">
+                <label for="copd">COPD</label>
+            </div>
+            <div class="checkbox-option">
+                <input type="checkbox" id="bronchitis" name="respiratory_conditions" value="Chronic Bronchitis">
+                <label for="bronchitis">Chronic Bronchitis</label>
+            </div>
+            <div class="checkbox-option">
+                <input type="checkbox" id="emphysema" name="respiratory_conditions" value="Emphysema">
+                <label for="emphysema">Emphysema</label>
+            </div>
+            <div class="checkbox-option">
+                <input type="checkbox" id="none-respiratory" name="respiratory_conditions" value="None">
+                <label for="none-respiratory">None of the above</label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Question 4: Smoking History -->
+    <div id="question4" class="question">
+        <h3><i class="fas fa-smoking"></i> Smoking History</h3>
+        <div class="options">
+            <div class="option">
+                <input type="radio" id="smoke-never" name="smoking_history" value="Never smoked">
+                <label for="smoke-never">Never smoked</label>
+            </div>
+            <div class="option">
+                <input type="radio" id="smoke-former" name="smoking_history" value="Former smoker">
+                <label for="smoke-former">Former smoker</label>
+            </div>
+            <div class="option">
+                <input type="radio" id="smoke-current" name="smoking_history" value="Current smoker">
+                <label for="smoke-current">Current smoker</label>
+            </div>
+            <div class="option">
+                <input type="radio" id="smoke-secondhand" name="smoking_history" value="Exposed to secondhand smoke">
+                <label for="smoke-secondhand">Exposed to secondhand smoke</label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Question 5: Living Environment -->
+    <div id="question5" class="question">
+        <h3><i class="fas fa-city"></i> Living Environment</h3>
+        <div class="options checkbox-group">
+            <div class="checkbox-option">
+                <input type="checkbox" id="urban" name="living_environment" value="Urban area">
+                <label for="urban">Urban area with heavy traffic</label>
+            </div>
+            <div class="checkbox-option">
+                <input type="checkbox" id="industrial" name="living_environment" value="Industrial zone">
+                <label for="industrial">Near industrial zone</label>
+            </div>
+            <div class="checkbox-option">
+                <input type="checkbox" id="rural" name="living_environment" value="Rural area">
+                <label for="rural">Rural area</label>
+            </div>
+            <div class="checkbox-option">
+                <input type="checkbox" id="coastal" name="living_environment" value="Coastal area">
+                <label for="coastal">Coastal area</label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Question 6: Common Symptoms -->
+    <div id="question6" class="question">
+        <h3><i class="fas fa-heartbeat"></i> Common Symptoms</h3>
+        <div class="options checkbox-group">
+            <div class="checkbox-option">
+                <input type="checkbox" id="cough" name="common_symptoms" value="Frequent coughing">
+                <label for="cough">Frequent coughing</label>
+            </div>
+            <div class="checkbox-option">
+                <input type="checkbox" id="breathlessness" name="common_symptoms" value="Shortness of breath">
+                <label for="breathlessness">Shortness of breath</label>
+            </div>
+            <div class="checkbox-option">
+                <input type="checkbox" id="wheezing" name="common_symptoms" value="Wheezing">
+                <label for="wheezing">Wheezing</label>
+            </div>
+            <div class="checkbox-option">
+                <input type="checkbox" id="chest-pain" name="common_symptoms" value="Chest tightness">
+                <label for="chest-pain">Chest tightness</label>
+            </div>
+            <div class="checkbox-option">
+                <input type="checkbox" id="symptom-none" name="common_symptoms" value="None">
+                <label for="symptom-none">None of the above</label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Question 7: Occupational Exposure -->
+    <div id="question7" class="question">
+        <h3><i class="fas fa-briefcase"></i> Occupational Exposure</h3>
+        <div class="options">
+            <div class="option">
+                <input type="radio" id="occ-construction" name="occupational_exposure" value="Construction/Mining">
+                <label for="occ-construction">Construction/Mining</label>
+            </div>
+            <div class="option">
+                <input type="radio" id="occ-chemical" name="occupational_exposure" value="Chemical Industry">
+                <label for="occ-chemical">Chemical Industry</label>
+            </div>
+            <div class="option">
+                <input type="radio" id="occ-healthcare" name="occupational_exposure" value="Healthcare">
+                <label for="occ-healthcare">Healthcare</label>
+            </div>
+            <div class="option">
+                <input type="radio" id="occ-agriculture" name="occupational_exposure" value="Agriculture">
+                <label for="occ-agriculture">Agriculture</label>
+            </div>
+            <div class="option">
+                <input type="radio" id="occ-office" name="occupational_exposure" value="Office Environment">
+                <label for="occ-office">Office Environment</label>
+            </div>
+            <div class="option">
+                <input type="radio" id="occ-other" name="occupational_exposure" value="Other">
+                <label for="occ-other">Other</label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Question 8: Medical History -->
+    <div id="question8" class="question">
+        <h3><i class="fas fa-notes-medical"></i> Medical History</h3>
+        <div class="options checkbox-group">
+            <div class="checkbox-option">
+                <input type="checkbox" id="hypertension" name="medical_history" value="Hypertension">
+                <label for="hypertension">Hypertension</label>
+            </div>
+            <div class="checkbox-option">
+                <input type="checkbox" id="diabetes" name="medical_history" value="Diabetes">
+                <label for="diabetes">Diabetes</label>
+            </div>
+            <div class="checkbox-option">
+                <input type="checkbox" id="heart-disease" name="medical_history" value="Heart Disease">
+                <label for="heart-disease">Heart Disease</label>
+            </div>
+            <div class="checkbox-option">
+                <input type="checkbox" id="allergies" name="medical_history" value="Allergies">
+                <label for="allergies">Allergies</label>
+            </div>
+            <div class="checkbox-option">
+                <input type="checkbox" id="immunocompromised" name="medical_history" value="Immunocompromised">
+                <label for="immunocompromised">Immunocompromised</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <button type="button" class="nav-button prev-button" style="display: none;"><i class="fas fa-arrow-left"></i> Previous</button>
+        <button type="button" class="nav-button next-button">Next <i class="fas fa-arrow-right"></i></button>
+        <button type="submit" class="nav-button submit-button" style="display: none;">Submit Assessment <i class="fas fa-check-circle"></i></button>
+    </div>
+
+</form>
+ <div id="result">
+    <h2>Your Health Assessment Score: <span id="healthScore">{{ health_score }}</span></h2>
+
+    <!-- Health Score Visualization -->
+    <div class="health-score-container">
+        <div class="score-circle">
+            <div class="score-inner-circle">
+                {{ health_score }}
+            </div>
+        </div>
+    </div>
+
+    <p>
+        {% if health_score <= 50 %}
+            <span style="color: #4CAF50; font-weight: bold; font-size: 1.2rem;">Excellent Health</span>
+            <br>You are in excellent health. Keep up your healthy lifestyle!
+        {% elif health_score <= 80 %}
+            <span style="color: #8BC34A; font-weight: bold; font-size: 1.2rem;">Good Health</span>
+            <br>You are in good health. Continue to maintain your current lifestyle.
+        {% elif health_score <= 120 %}
+            <span style="color: #9C27B0; font-weight: bold; font-size: 1.2rem;">Moderate Risk</span>
+            <br>Some areas need attention. Consider improving your health habits.
+        {% elif health_score <= 150 %}
+            <span style="color: #FF9800; font-weight: bold; font-size: 1.2rem;">Warning</span>
+            <br>Some areas require serious attention. We recommend consulting a healthcare professional.
+        {% elif health_score <= 200 %}
+            <span style="color: #F44336; font-weight: bold; font-size: 1.2rem;">High Risk</span>
+            <br>High health risks detected. Please seek immediate medical advice.
+        {% else %}
+            <span style="color: #B71C1C; font-weight: bold; font-size: 1.2rem;">Critical Risk</span>
+            <br>Severe health risks detected. Immediate medical intervention is necessary.
+        {% endif %}
+    </p>
+</div>
+</div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+    const questions = document.querySelectorAll('.question');
+    const progressBar = document.querySelector('.progress');
+    const progressText = document.getElementById('progressText');
+    const nextButton = document.querySelector('.next-button');
+    const prevButton = document.querySelector('.prev-button');
+    const submitButton = document.querySelector('.submit-button');
+    const backButton = document.querySelector('.back-button');
+    const resultDiv = document.getElementById('result');
+
+    // Add event listener for back button to ensure it navigates correctly
+    if (backButton) {
+        backButton.addEventListener('click', function(e) {
+            window.location.href = '/dashboard/';
+        });
+    }
+
+    let currentQuestion = 0;
+    const totalQuestions = questions.length;
+
+    // Function to update the progress bar
+    function updateProgress() {
+        const progressPercentage = ((currentQuestion + 1) / totalQuestions) * 100;
+        progressBar.style.width = `${progressPercentage}%`;
+        progressText.textContent = `${currentQuestion + 1}/${totalQuestions} Questions`;
+
+        // Update score circle if result is shown
+        if (resultDiv.style.display === 'block') {
+            const scoreElement = document.getElementById('healthScore');
+            if (scoreElement) {
+                const score = parseInt(scoreElement.textContent) || 0;
+                const maxScore = 250; // Adjust based on your max possible score
+                const percentage = (score / maxScore) * 100;
+                document.querySelector('.score-circle').style.background =
+                    `conic-gradient(var(--primary-color) ${percentage}%, #f8f9fa ${percentage}%)`;
+            }
+        }
+    }
+
+    // Show the current question and update navigation buttons
+    function showQuestion(index) {
+        questions.forEach(q => q.classList.remove('active'));
+        questions[index].classList.add('active');
+
+        prevButton.style.display = index === 0 ? 'none' : 'block';
+        if (index === totalQuestions - 1) {
+            nextButton.style.display = 'none';
+            submitButton.style.display = 'block';
+        } else {
+            nextButton.style.display = 'block';
+            submitButton.style.display = 'none';
+        }
+
+        updateProgress();
+    }
+
+    // Check if the current question is answered
+    function isQuestionAnswered(questionElement) {
+        if (questionElement.querySelector('.checkbox-group')) {
+            const checkboxes = questionElement.querySelectorAll('input[type="checkbox"]');
+            return Array.from(checkboxes).some(checkbox => checkbox.checked);
+        } else {
+            const radios = questionElement.querySelectorAll('input[type="radio"]');
+            return Array.from(radios).some(radio => radio.checked);
+        }
+    }
+
+    // Event listener for next button
+    nextButton.addEventListener('click', () => {
+        const currentQuestionElement = questions[currentQuestion];
+        if (isQuestionAnswered(currentQuestionElement)) {
+            if (currentQuestion < totalQuestions - 1) {
+                currentQuestion++;
+                showQuestion(currentQuestion);
+                window.scrollTo({top: 0, behavior: 'smooth'});
+            }
+        } else {
+            // Show error message
+            let errorMsg = currentQuestionElement.querySelector('.error-message');
+            if (!errorMsg) {
+                errorMsg = document.createElement('div');
+                errorMsg.className = 'error-message';
+                errorMsg.textContent = 'Please select an option before proceeding';
+                currentQuestionElement.appendChild(errorMsg);
+
+                // Fade out error after 3 seconds
+                setTimeout(() => {
+                    errorMsg.style.opacity = '0';
+                    setTimeout(() => {
+                        errorMsg.remove();
+                    }, 300);
+                }, 3000);
+            }
+            errorMsg.style.display = 'block';
+            errorMsg.style.opacity = '1';
+        }
+    });
+
+    // Event listener for previous button
+    prevButton.addEventListener('click', () => {
+        if (currentQuestion > 0) {
+            currentQuestion--;
+            showQuestion(currentQuestion);
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+    });
+
+    // Event listeners for radio buttons
+    document.querySelectorAll('input[type="radio"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            // Remove selected class from all options in this group
+            const name = this.getAttribute('name');
+            document.querySelectorAll(`input[name="${name}"]`).forEach(input => {
+                input.closest('.option').classList.remove('selected');
+            });
+
+            // Add selected class to this option
+            this.closest('.option').classList.add('selected');
+        });
+    });
+
+    // Event listeners for checkboxes
+    document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            // Toggle selected class for this option
+            this.closest('.checkbox-option').classList.toggle('selected', this.checked);
+
+            // Handle "None" options
+            const name = this.getAttribute('name');
+            const isNoneOption = this.value === 'None';
+
+            if (isNoneOption && this.checked) {
+                // If "None" is checked, uncheck other options
+                document.querySelectorAll(`input[name="${name}"]:not([value="None"])`).forEach(input => {
+                    input.checked = false;
+                    input.closest('.checkbox-option').classList.remove('selected');
+                });
+            } else if (!isNoneOption && this.checked) {
+                // If any other option is checked, uncheck "None"
+                const noneOption = document.querySelector(`input[name="${name}"][value="None"]`);
+                if (noneOption) {
+                    noneOption.checked = false;
+                    noneOption.closest('.checkbox-option').classList.remove('selected');
+                }
+            }
+        });
+    });
+
+    // Form submission
+    document.getElementById('healthAssessment').addEventListener('submit', function(e) {
+        // You can add validation here if needed
+
+        // If results are already available, show them
+        if (resultDiv && {{ health_score|default:0 }} > 0) {
+            resultDiv.style.display = 'block';
+            updateProgress(); // Update the score circle
+        }
+    });
+
+    // Show results if they exist (e.g., after form submission)
+    if (resultDiv && {{ health_score|default:0 }} > 0) {
+        resultDiv.style.display = 'block';
+        updateProgress(); // Initialize the score circle
+    }
+
+    // Initialize the first question
+    showQuestion(currentQuestion);
+});
+</script>
+
+
+</body>
+</html>

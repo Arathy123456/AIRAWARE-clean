@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html>
+<head>
+  {% load static %}
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      color: #1a1a1a;
+      background-color: #ffffff;
+    }
+
+    /* Navbar */
+    .navbar {
+      background: #ffffff;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 0;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .navbar-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 16px 24px;
+    }
+
+    .navbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: #1f2937;
+      font-weight: 700;
+      font-size: 1.5rem;
+    }
+
+    .navbar-brand img {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+    }
+
+    .nav-links {
+      display: flex;
+      list-style: none;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .nav-link {
+      text-decoration: none;
+      color: #6b7280;
+      font-weight: 500;
+      padding: 8px 16px;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      font-size: 14px;
+    }
+
+    .nav-link:hover {
+      background: #f3f4f6;
+      color: #1f2937;
+    }
+
+    .nav-link.login-btn {
+      background: #3b82f6;
+      color: white;
+      margin-left: 8px;
+    }
+
+    .nav-link.login-btn:hover {
+      background: #2563eb;
+      color: white;
+    }
+
+    .menu-toggle {
+      display: none;
+      cursor: pointer;
+      font-size: 1.5rem;
+      color: #6b7280;
+      padding: 8px;
+    }
+
+    /* Hero Section */
+    .hero-section {
+      background:
+        linear-gradient(135deg, rgba(102, 126, 234, 0.85) 0%, rgba(118, 75, 162, 0.85) 100%),
+        url("{% static 'img/hero-bg.jpg' %}") center/cover no-repeat;
+      min-height: 600px;
+      display: flex;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      color: white;
+    }
+
+    .hero-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 1;
+    }
+
+    .particles {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .particle {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      animation: float 8s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.7; }
+      50% { transform: translateY(-30px) rotate(180deg); opacity: 1; }
+    }
+
+    .hero-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 80px 24px;
+      text-align: center;
+      position: relative;
+      z-index: 3;
+    }
+
+    .hero-title {
+      font-size: 3.5rem;
+      font-weight: 800;
+      margin-bottom: 24px;
+      letter-spacing: -0.025em;
+    }
+
+    .hero-subtitle {
+      font-size: 1.25rem;
+      margin-bottom: 48px;
+      opacity: 0.9;
+      font-weight: 400;
+    }
+
+    .aqi-display {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      padding: 48px;
+      margin: 48px auto;
+      max-width: 400px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .aqi-label {
+      font-size: 1rem;
+      opacity: 0.8;
+      margin-bottom: 16px;
+    }
+
+    .aqi-value {
+      font-size: 4rem;
+      font-weight: 800;
+      margin: 24px 0;
+      line-height: 1;
+    }
+
+    .aqi-status {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 16px 0;
+    }
+
+    .aqi-icon {
+      font-size: 2.5rem;
+      margin-top: 16px;
+    }
+
+    .cta-button {
+      background: #ffffff;
+      color: #3b82f6;
+      padding: 16px 32px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s ease;
+      font-size: 1rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .cta-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      color: #3b82f6;
+    }
+
+    /* Stats Section */
+    .stats-section {
+      padding: 80px 24px;
+      background: #f9fafb;
+    }
+
+    .stats-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 32px;
+      margin-top: 48px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 32px;
+      border-radius: 16px;
+      text-align: center;
+      border: 1px solid #e5e7eb;
+      transition: all 0.2s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #3b82f6;
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      color: #6b7280;
+      font-weight: 500;
+    }
+
+    /* Section Styles */
+    .section {
+      padding: 80px 24px;
+    }
+
+    .section-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 64px;
+    }
+
+    .section-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 16px;
+    }
+
+    .section-subtitle {
+      font-size: 1.125rem;
+      color: #6b7280;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Cities Section */
+    .cities-section {
+      background: white;
+    }
+
+    .cities-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+
+    .city-card {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 32px;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .city-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      border-color: #3b82f6;
+    }
+
+    .city-icon {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      color: white;
+      font-size: 1.5rem;
+    }
+
+    .city-name {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 8px;
+    }
+
+    .city-type {
+      color: #6b7280;
+      font-size: 0.875rem;
+    }
+
+    .city-link {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    /* Services Section */
+    .services-section {
+      background: #f9fafb;
+    }
+
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 32px;
+    }
+
+    .service-card {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      text-align: center;
+      border: 1px solid #e5e7eb;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .service-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+    }
+
+    .service-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+    }
+
+    .service-icon {
+      font-size: 3rem;
+      color: #3b82f6;
+      margin-bottom: 24px;
+    }
+
+    .service-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 16px;
+    }
+
+    .service-description {
+      color: #6b7280;
+      margin-bottom: 32px;
+      line-height: 1.7;
+    }
+
+    .service-button {
+      background: #3b82f6;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .service-button:hover {
+      background: #2563eb;
+      transform: translateY(-2px);
+      color: white;
+    }
+
+    /* AQI Scale Section */
+    .aqi-scale-section {
+      background: white;
+    }
+
+    .aqi-scale-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .aqi-scale-item {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      border: 1px solid #e5e7eb;
+      transition: all 0.2s ease;
+    }
+
+    .aqi-scale-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .aqi-range {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .aqi-color-indicator {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+    }
+
+    .aqi-good { background: #10b981; }
+    .aqi-moderate { background: #f59e0b; }
+    .aqi-unhealthy { background: #ef4444; }
+    .aqi-hazardous { background: #7c2d12; }
+
+    .aqi-range-text {
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    .aqi-description {
+      color: #6b7280;
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+
+    /* Footer */
+    .footer {
+      background: #1f2937;
+      color: white;
+      padding: 64px 24px 24px;
+    }
+
+    .footer-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 48px;
+      margin-bottom: 48px;
+    }
+
+    .footer-section h3 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: #f9fafb;
+    }
+
+    .footer-link {
+      display: block;
+      color: #d1d5db;
+      text-decoration: none;
+      margin-bottom: 12px;
+      transition: color 0.2s ease;
+      font-size: 0.875rem;
+    }
+
+    .footer-link:hover {
+      color: #3b82f6;
+    }
+
+    .footer-text {
+      color: #d1d5db;
+      font-size: 0.875rem;
+      line-height: 1.6;
+    }
+
+    .social-links {
+      display: flex;
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .social-link {
+      width: 40px;
+      height: 40px;
+      background: #374151;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .social-link:hover {
+      background: #3b82f6;
+      transform: translateY(-2px);
+    }
+
+    .footer-bottom {
+      border-top: 1px solid #374151;
+      padding-top: 24px;
+      text-align: center;
+      color: #9ca3af;
+      font-size: 0.875rem;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .hero-section {
+        background:
+          linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%),
+          url("{% static 'img/hero-bg-mobile.jpg' %}") center/cover no-repeat;
+      }
+
+      .menu-toggle {
+        display: block;
+      }
+
+      .nav-links {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        flex-direction: column;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 16px;
+        border-top: 1px solid #e5e7eb;
+      }
+
+      .nav-links.active {
+        display: flex;
+      }
+
+      .nav-link {
+        padding: 12px 16px;
+        width: 100%;
+        text-align: left;
+      }
+
+      .hero-title {
+        font-size: 2.5rem;
+      }
+
+      .section-title {
+        font-size: 2rem;
+      }
+
+      .aqi-display {
+        margin: 32px 16px;
+        padding: 32px;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 24px;
+      }
+
+      .services-grid,
+      .cities-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .section {
+        padding: 60px 16px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .hero-title {
+        font-size: 2rem;
+      }
+
+      .aqi-value {
+        font-size: 3rem;
+      }
+
+      .section-title {
+        font-size: 1.75rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-content">
+      <a href="#" class="navbar-brand">
+        <img src="{% static 'img/aqi.jpg' %}" alt="AQM Logo">
+        AirQuality Kerala
+      </a>
+      <div class="menu-toggle" onclick="toggleMenu()">
+        <i class="fas fa-bars"></i>
+      </div>
+      <ul class="nav-links">
+        <li><a href="" class="nav-link">Home</a></li>
+        <li><a href="#cities" class="nav-link">Cities</a></li>
+        <li><a href="#services" class="nav-link">Services</a></li>
+        <li><a href="#contact" class="nav-link">Contact</a></li>
+        <li><a href="{% url 'admin_view' %}" class="nav-link">Dashboard</a></li>
+        <li><a href="{% url 'dashboard' %}" class="nav-link">Forecasting</a></li>
+        <li><a href="{% url 'login' %}" class="nav-link login-btn">
+          <i class="fas fa-sign-in-alt"></i> Login
+        </a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero-section" id="home">
+    <div class="hero-overlay"></div>
+    <div id="particles" class="particles"></div>
+    <div class="hero-content">
+      <h1 class="hero-title">Air Quality Monitoring</h1>
+      <p class="hero-subtitle">Real-time air quality data and insights for Kerala cities</p>
+
+      <div class="aqi-display">
+        <div class="aqi-label">Current AQI • Last Updated: <span id="received-at">N/A</span></div>
+        <div class="aqi-value" id="aqi">{{ highest_sub_index }}</div>
+        <div class="aqi-status">AQI - GOOD</div>
+        <div class="aqi-icon">
+          <i class="fas fa-smile"></i>
+        </div>
+      </div>
+
+      <a href="{% url 'map_view' %}" class="cta-button">
+        <i class="fas fa-map-marked-alt"></i>
+        View Live AQI Map
+      </a>
+    </div>
+  </section>
+
+  <!-- Stats Section -->
+  <section class="stats-section">
+    <div class="stats-container">
+      <div class="section-header">
+        <h2 class="section-title">Kerala Air Quality Network</h2>
+        <p class="section-subtitle">Comprehensive monitoring across multiple locations for accurate air quality assessment</p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number">5</div>
+          <div class="stat-label">Monitoring Stations</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">24/7</div>
+          <div class="stat-label">Real-time Monitoring</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">6</div>
+          <div class="stat-label">Key Pollutants Tracked</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">100%</div>
+          <div class="stat-label">Data Accuracy</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AQI Scale Section -->
+  <section class="section aqi-scale-section">
+    <div class="section-container">
+      <div class="section-header">
+        <h2 class="section-title">Understanding Air Quality Index</h2>
+        <p class="section-subtitle">Know what the AQI numbers mean for your health and daily activities</p>
+      </div>
+
+      <div class="aqi-scale-grid">
+        <div class="aqi-scale-item">
+          <div class="aqi-range">
+            <div class="aqi-color-indicator aqi-good"></div>
+            <div class="aqi-range-text">Good (0-50)</div>
+          </div>
+          <div class="aqi-description">
+            Air quality is satisfactory. Air pollution poses little or no risk for everyone.
+          </div>
+        </div>
+
+        <div class="aqi-scale-item">
+          <div class="aqi-range">
+            <div class="aqi-color-indicator aqi-moderate"></div>
+            <div class="aqi-range-text">Moderate (51-100)</div>
+          </div>
+          <div class="aqi-description">
+            Air quality is acceptable. However, sensitive individuals may experience minor issues.
+          </div>
+        </div>
+
+        <div class="aqi-scale-item">
+          <div class="aqi-range">
+            <div class="aqi-color-indicator aqi-unhealthy"></div>
+            <div class="aqi-range-text">Unhealthy (101-200)</div>
+          </div>
+          <div class="aqi-description">
+            Members of sensitive groups may experience health effects. Limit outdoor activities.
+          </div>
+        </div>
+
+        <div class="aqi-scale-item">
+          <div class="aqi-range">
+            <div class="aqi-color-indicator aqi-hazardous"></div>
+            <div class="aqi-range-text">Hazardous (201+)</div>
+          </div>
+          <div class="aqi-description">
+            Health alert: The risk of health effects is increased for everyone. Avoid outdoor activities.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cities Section -->
+  <section class="section cities-section" id="cities">
+    <div class="section-container">
+      <div class="section-header">
+        <h2 class="section-title">Monitoring Locations</h2>
+        <p class="section-subtitle">Air quality data from strategic locations across Ernakulam district</p>
+      </div>
+
+      <div class="cities-grid">
+        <div class="city-card">
+          <div class="city-icon">
+            <i class="fas fa-university"></i>
+          </div>
+          <a href="{% url 'map_view' %}" class="city-link">
+            <div class="city-name">Adi Shankara Institute</div>
+            <div class="city-type">Educational Institution</div>
+          </a>
+        </div>
+
+        <div class="city-card">
+          <div class="city-icon">
+            <i class="fas fa-city"></i>
+          </div>
+          <a href="{% url 'map_view' %}" class="city-link">
+            <div class="city-name">Matoor, Ernakulam</div>
+            <div class="city-type">Urban Area</div>
+          </a>
+        </div>
+
+        <div class="city-card">
+          <div class="city-icon">
+            <i class="fas fa-building"></i>
+          </div>
+          <a href="{% url 'map_view' %}" class="city-link">
+            <div class="city-name">Marotichodu Community Hall</div>
+            <div class="city-type">Community Center</div>
+          </a>
+        </div>
+
+        <div class="city-card">
+          <div class="city-icon">
+            <i class="fas fa-home"></i>
+          </div>
+          <a href="{% url 'map_view' %}" class="city-link">
+            <div class="city-name">Kaipatoor, Ernakulam</div>
+            <div class="city-type">Residential Area</div>
+          </a>
+        </div>
+
+        <div class="city-card">
+          <div class="city-icon">
+            <i class="fas fa-landmark"></i>
+          </div>
+          <a href="{% url 'map_view' %}" class="city-link">
+            <div class="city-name">Kalady Panchayat Office</div>
+            <div class="city-type">Government Office</div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Services Section -->
+  <section class="section services-section" id="services">
+    <div class="section-container">
+      <div class="section-header">
+        <h2 class="section-title">Our Services</h2>
+        <p class="section-subtitle">Advanced air quality solutions powered by cutting-edge technology</p>
+      </div>
+
+      <div class="services-grid">
+        <div class="service-card">
+          <div class="service-icon">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <h3 class="service-title">Personalized AQI Forecast</h3>
+          <p class="service-description">
+            Get accurate air quality predictions with advanced meteorological models and machine learning algorithms for better planning.
+          </p>
+          <a href="{% url 'risk_assessment' %}" class="service-button">
+            <i class="fas fa-arrow-right"></i>
+            Get Forecast
+          </a>
+        </div>
+
+        <div class="service-card">
+          <div class="service-icon">
+            <i class="fas fa-heartbeat"></i>
+          </div>
+          <h3 class="service-title">Health Risk Assessment</h3>
+          <p class="service-description">
+            Receive personalized health recommendations based on current air quality conditions and your individual health profile.
+          </p>
+          <a href="{% url 'risk_assessment' %}" class="service-button">
+            <i class="fas fa-arrow-right"></i>
+            Assess Risk
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer" id="contact">
+    <div class="footer-container">
+      <div class="footer-grid">
+        <div class="footer-section">
+          <h3>About AirQuality Kerala</h3>
+          <p class="footer-text">
+            Leading provider of real-time air quality monitoring solutions in Kerala, committed to environmental sustainability and public health awareness.
+          </p>
+          <div class="social-links">
+            <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+          </div>
+        </div>
+
+        <div class="footer-section">
+          <h3>Quick Links</h3>
+          <a href="#" class="footer-link">Home</a>
+          <a href="#cities" class="footer-link">Monitoring Stations</a>
+          <a href="#services" class="footer-link">Services</a>
+          <a href="{% url 'admin_view' %}" class="footer-link">Dashboard</a>
+          <a href="{% url 'dashboard' %}" class="footer-link">Forecasting</a>
+          <a href="{% url 'logout' %}" class="footer-link">Logout</a>
+        </div>
+
+        <div class="footer-section">
+          <h3>Services</h3>
+          <a href="{% url 'risk_assessment' %}" class="footer-link">AQI Forecasting</a>
+          <a href="{% url 'risk_assessment' %}" class="footer-link">Health Risk Assessment</a>
+          <a href="{% url 'map_view' %}" class="footer-link">Live AQI Map</a>
+          <a href="#" class="footer-link">Data Analytics</a>
+          <a href="{% url 'admin_login' %}" class="footer-link">Admin Portal</a>
+        </div>
+
+        <div class="footer-section">
+          <h3>Contact Information</h3>
+          <p class="footer-text">
+            Vidya Bharathi Nagar, Mattoor<br>
+            Kalady 683574, Ernakulam<br>
+            Kerala, India
+          </p>
+          <br>
+          <p class="footer-text">
+            <strong>Email:</strong> aiiot@adishankara.ac.in<br>
+            <strong>Phone:</strong> 0484 246 3825
+          </p>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2025 AirQuality Kerala. All rights reserved. Developed by ASIET AI & IoT Lab.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    function fetchLatestData() {
+      $.ajax({
+        url: "{% url 'home' %}",
+        type: "GET",
+        dataType: "json",
+        success: function (data) {
+          console.log("AJAX success:", data);
+          if (data.latest_item) {
+            updateDashboard(data.latest_item, data.highest_sub_index);
+          } else {
+            console.error("No data in response.");
+          }
+        },
+        error: function (xhr, status, error) {
+          console.error("AJAX error:", error);
+        }
+      });
+    }
+
+    function updateDashboard(latestItem, highestSubIndex) {
+      $('#received-at').text(latestItem.date || 'N/A');
+      $('#aqi').text(highestSubIndex || 'N/A');
+
+      const aqiValue = parseInt(highestSubIndex || 0, 10);
+      const aqiStatusElement = $('.aqi-status');
+      const aqiIconElement = $('.aqi-icon i');
+
+      if (aqiValue <= 50) {
+        aqiStatusElement.text('AQI - GOOD');
+        aqiIconElement.attr('class', 'fas fa-smile').css('color', '#10b981');
+      } else if (aqiValue <= 100) {
+        aqiStatusElement.text('AQI - MODERATE');
+        aqiIconElement.attr('class', 'fas fa-meh').css('color', '#f59e0b');
+      } else if (aqiValue <= 150) {
+        aqiStatusElement.text('AQI - UNHEALTHY');
+        aqiIconElement.attr('class', 'fas fa-frown').css('color', '#ef4444');
+      } else {
+        aqiStatusElement.text('AQI - HAZARDOUS');
+        aqiIconElement.attr('class', 'fas fa-skull').css('color', '#7c2d12');
+      }
+    }
+
+    setInterval(fetchLatestData, 5000);
+
+    $(document).ready(function() {
+      fetchLatestData();
+    });
+
+    function createParticles() {
+      const particlesContainer = document.getElementById('particles');
+      for (let i = 0; i < 40; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.top = Math.random() * 100 + '%';
+        particle.style.width = Math.random() * 6 + 4 + 'px';
+        particle.style.height = particle.style.width;
+        particle.style.animationDelay = Math.random() * 8 + 's';
+        particlesContainer.appendChild(particle);
+      }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth'
+          });
+        }
+      });
+    });
+
+    function toggleMenu() {
+      const navLinks = document.querySelector('.nav-links');
+      navLinks.classList.toggle('active');
+    }
+
+    window.addEventListener('load', function() {
+      createParticles();
+      fetchLatestData();
+    });
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

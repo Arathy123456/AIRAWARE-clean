@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Air Quality Dashboard</title>
+    <link href="{% static 'google.css' %}" rel="stylesheet" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
+
+    <style>
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            //filter:invert(100%);
+
+        }
+        .map-section {
+            width: 100%;
+            height: 100%;
+        }
+        .aqi-details {
+            position: absolute;
+            bottom: 30px;
+            margin-left:10px;
+            margin-top:10px;
+            background-color:  rgba(0, 255, 0, 0.3);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+        .aqi-details h3 {
+            margin: 0;
+        }
+        .aqi-stats div {
+            margin-bottom: 5px;
+        }
+         #graph-kalady { height: 50%; }
+        #graph-matoor { height: 50%; }
+  .map-section {
+        position: relative;
+        width: 100%;
+        height: 100px; /* Adjust the height as needed */
+    }
+
+    /* Styles for the button */
+    #graphbutton {
+        position: absolute; /* Positions the button inside the map */
+        top: 30px; /* Distance from the top of the map */
+        right: 40px; /* Distance from the right edge of the map */
+        padding: 10px 15px; /* Button padding for better click area */
+        background-color: rgba(0, 123, 255, 0.8); /* Semi-transparent blue background */
+        color: white; /* White text color */
+        border: none; /* Removes default border */
+        border-radius: 5px; /* Rounded corners for the button */
+        cursor: pointer; /* Pointer cursor on hover */
+        z-index: 1000; /* Ensures the button is above other elements on the map */
+    }
+
+    /* Ensures the link inside the button inherits the button's style */
+    #graphbutton a {
+        text-decoration: none; /* Removes underline from the link */
+        color: inherit; /* Inherits the text color from the button */
+        display: block; /* Makes the link fill the entire button area */
+    }
+    #graphbutton1 {
+        position: absolute; /* Positions the button inside the map */
+        top: 75px; /* Distance from the top of the map */
+        right: 40px; /* Distance from the right edge of the map */
+        padding: 10px 15px; /* Button padding for better click area */
+        background-color: rgba(0, 123, 255, 0.8); /* Semi-transparent blue background */
+        color: white; /* White text color */
+        border: none; /* Removes default border */
+        border-radius: 5px; /* Rounded corners for the button */
+        cursor: pointer; /* Pointer cursor on hover */
+        z-index: 1000; /* Ensures the button is above other elements on the map */
+    }
+
+    /* Ensures the link inside the button inherits the button's style */
+    #graphbutton1 a {
+        text-decoration: none; /* Removes underline from the link */
+        color: inherit; /* Inherits the text color from the button */
+        display: block; /* Makes the link fill the entire button area */
+    }
+    </style>
+</head>
+<body>
+   <div class="container">
+    <div id="map" class="map-section" style="position: relative; height: 700px;">
+        <!-- Map content here -->
+    </div>
+
+    <div id="graph-container" style="display: none; margin-top: 50px;">
+        <button type="button" id="closeGraph">Close Graph</button>
+        <div id="graph-output">
+            <img id="graph-image" src="" alt="AQI Graph" style="width: 100%; max-width: 800px;  height: 500px;">
+        </div>
+    </div>
+
+    <button type="button" id="graphbutton">Show AQI Graph</button>
+       <button type="button" id="graphbutton1"><a href="#graph-kalady-content">Explore More</a></button>
+</div>
+
+</div>
+        <!--<div class="aqi-details" id="aqi-details">
+          <h3 id="location-name">Select a location</h3>-->
+
+            <!--<div class="aqi-index" id="aqi-index">--</div>
+            <p>Air Quality Index: <span id="aqi-status">--</span></p>
+            <div class="aqi-stats">
+                <div>city: <span id="city">--</span></div>-->
+               <!-- <div>PM2.5: <span id="pm25">--</span></div>
+                <div>PM10: <span id="pm10">--</span></div>
+                <br>
+                <div>SO2: <span id="so2">--</span></div>
+                <div>O3: <span id="o3">--</span></div>
+                <div>CO: <span id="co">--</span></div>
+                <div>NO2: <span id="no2">--</span></div>
+            </div>
+            <div class="weather-details">
+                Weather: <span id="weather">--</span>
+            </div>
+        </div>
+    </div>-->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="{% static 'aqi_map.js' %}"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src='//api.tiles.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.3.1/leaflet-omnivore.min.js'></script>
+
+
+
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script>
+
+    // Initialize the map
+    var map = L.map('map').setView([10.17168527, 76.44532185], 12);
+
+    // Add a tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 13,
+        minZoom: 5,
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+
+   $(document).ready(function() {
+            $('#graphbutton').click(function() {
+                $('#graph-image').attr('src', "{% url 'aqi_graphs' %}");
+                $('#graph-container').show();
+            });
+            $('#closeGraph').click(function() {
+                $('#graph-container').hide();
+            });
+    // Define marker locations
+    var markerKalady = L.marker([10.17008076, 76.44678127]).addTo(map);
+    var markerMatoor = L.marker([10.17033356, 76.42875653]).addTo(map);
+
+    // Add popups to markers
+    markerKalady.bindPopup("<b>Kalady!</b><br>AQI 58");
+    markerMatoor.bindPopup("<b>Matoor!</b><br>AQI 57");
+
+    // Function to fetch and display the graph
+    function fetchGraphForCity(city) {
+        fetch(`/air_quality_graph/${city}`)  // Pass the city as part of the request
+            .then(response => response.text())
+            .then(html => {
+                // Insert the graph into the modal
+                document.getElementById('graphContent').innerHTML = html;
+                // Show the modal
+                document.getElementById('graphModal').style.display = 'block';
+            })
+            .catch(error => console.error('Error fetching graphs:', error));
+    }
+
+    // Event listeners for marker clicks
+    markerKalady.on('click', function() {
+        fetchGraphForCity('kalady');  // Pass 'kalady' to fetch the graph
+    });
+
+    markerMatoor.on('click', function() {
+        fetchGraphForCity('matoor');  // Pass 'matoor' to fetch the graph
+    });
+
+});
+
+
+
+        </script>
+
+    </div>
+
+<div id="graph-kalady-content">
+    {{ graph_kalady|safe }}
+</div>
+<!-- split -->
+<div id="graph-matoor-content">
+    {{ graph_matoor|safe }}
+</div>
+
+
+
+</body>
+</html>

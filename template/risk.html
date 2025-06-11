@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Risk Assessment</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #bbdefb, #90caf9, #64b5f6);
+            --card-bg: #ffffff;
+            --text-primary: #2c3e50;
+            --shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Nunito Sans', sans-serif;
+            background: #f8fafc;
+            color: var(--text-primary);
+        }
+
+        .dashboard-header {
+            background: var(--primary-gradient);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-toggle {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: none;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .dropdown-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            padding: 0.5rem;
+            min-width: 200px;
+            display: none;
+            z-index: 100;
+        }
+
+        .dropdown:hover .dropdown-menu {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .dropdown-item {
+            display: block;
+            padding: 0.8rem 1rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .dropdown-item:hover {
+            background: #f8fafc;
+        }
+
+        .main-content {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .aqi-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            animation: slideIn 0.5s ease;
+        }
+
+        .aqi-value {
+            font-size: 3.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin: 1rem 0;
+            color: #2c3e50;
+        }
+
+        .aqi-status {
+            text-align: center;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            display: inline-block;
+            font-weight: 600;
+            margin: 0 auto;
+        }
+
+        .survey-button {
+            background: #4CAF50;
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 2rem auto;
+        }
+
+        .survey-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .risk-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .risk-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .risk-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-menu {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .aqi-value {
+                font-size: 2.5rem;
+            }
+        }
+
+    .map-section {
+        width: 100%;
+        max-width: 1000px;
+        margin: 2rem auto;
+        padding: 0 1.5rem;
+    }
+
+    #map {
+        height: 200px;
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        margin-bottom: 2rem;
+    }
+
+    .map-popup {
+        font-family: 'Nunito Sans', sans-serif;
+    }
+
+    .map-popup h3 {
+        margin: 0 0 10px 0;
+        color: var(--text-primary);
+    }
+
+    .map-popup .aqi-badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        color: white;
+        font-weight: bold;
+        margin: 5px 0;
+    }
+
+    .map-popup .weather-info {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    .map-popup .weather-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 13px;
+    }
+
+    .custom-marker {
+        text-align: center;
+    }
+
+    .marker-pin {
+        width: 30px;
+        height: 30px;
+        border-radius: 50% 50% 50% 0;
+        position: absolute;
+        transform: rotate(-45deg);
+        left: 50%;
+        top: 50%;
+        margin: -15px 0 0 -15px;
+        transition: all 0.3s ease;
+    }
+    </style>
+</head>
+<body>
+    <header class="dashboard-header">
+        <div class="header-content">
+            <h1 class="title">
+                <i class="fas fa-shield-alt"></i>
+                Personal Risk Assessment
+            </h1>
+            <nav class="nav-menu">
+                <div class="dropdown">
+                    <button class="dropdown-toggle">
+                        <i class="fas fa-chart-bar"></i>
+                        Rankings
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="dropdown-menu">
+                        <a href="https://www.aqi.in/real-time-most-polluted-city-ranking" class="dropdown-item">
+                            <i class="fas fa-wind"></i> AQI Ranking
+                        </a>
+                        <a href="https://www.aqi.in/weather/live-ranking" class="dropdown-item">
+                            <i class="fas fa-cloud-sun"></i> Weather Ranking
+                        </a>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="aqi-card">
+            <h2 style="text-align: center; margin-top: 0;">Current Air Quality Index</h2>
+                        <div class="map-section">
+                <div id="map"></div>
+            </div>
+        </div>
+
+        <button class="survey-button" >
+            <i class="fas fa-clipboard-list"></i>
+            Update Health Assessment Survey
+        </button>
+
+        <div class="risk-grid">
+            <div class="risk-card">
+                <h3><i class="fas fa-lungs"></i> Respiratory Risk</h3>
+                <div id="respiratoryRisk">Calculating...</div>
+            </div>
+            <div class="risk-card">
+                <h3><i class="fas fa-heartbeat"></i> Health Impact</h3>
+                <div id="healthImpact">Analyzing...</div>
+            </div>
+            <div class="risk-card">
+                <h3><i class="fas fa-running"></i> Activity Recommendation</h3>
+                <div id="activityRec">Evaluating...</div>
+            </div>
+            <div class="risk-card">
+                <h3><i class="fas fa-user-shield"></i> Protection Level</h3>
+                <div id="protectionLevel">Assessing...</div>
+            </div>
+        </div>
+    </main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" rel="stylesheet">
+    <script>
+    // Initialize map
+      const map = L.map('map').setView([10.184252, 76.421594], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Add marker at the specified location
+        const marker = L.marker([10.178261036688674, 76.4308114346126]).addTo(map);
+        marker.bindPopup('Adi Shankara Institute of Engineering and Technology Kaladi');
+
+    // Function to get AQI color
+    function getAQIColor(aqi) {
+        if (aqi <= 50) return '#4CAF50'; // Good
+        if (aqi <= 100) return '#FFC107'; // Moderate
+        if (aqi <= 150) return '#FF9800'; // Unhealthy for Sensitive Groups
+        if (aqi <= 200) return '#F44336'; // Unhealthy
+        return '#9C27B0'; // Very Unhealthy
+    }
+
+    // Custom marker icon
+    function createCustomMarker(aqi) {
+        const color = getAQIColor(aqi);
+        const markerHtml = `
+            <div class="custom-marker">
+                <div class="marker-pin" style="background: ${color}"></div>
+                <i class="fas fa-map-marker-alt" style="color: ${color}; font-size: 24px;"></i>
+            </div>
+        `;
+        return L.divIcon({
+            html: markerHtml,
+            className: 'custom-div-icon',
+            iconSize: [30, 42],
+            iconAnchor: [15, 42]
+        });
+    }
+
+    // Create popup content
+    function createPopupContent(data) {
+        return `
+            <div class="map-popup">
+                <h3><i class="fas fa-map-marker-alt"></i> ASIET Kalady</h3>
+                <div>
+                    <span class="aqi-badge" style="background-color: ${getAQIColor(data.latest_aqi)}">
+                        AQI: ${data.latest_aqi}
+                    </span>
+                </div>
+                <div class="weather-info">
+                    <div class="weather-item">
+                        <i class="fas fa-thermometer-half"></i>
+                        ${data.latest_temperature}°C
+                    </div>
+                    <div class="weather-item">
+                        <i class="fas fa-tint"></i>
+                        ${data.latest_humidity}%
+                    </div>
+                    <div class="weather-item">
+                        <i class="fas fa-wind"></i>
+                        ${data.latest_pressure} hPa
+                    </div>
+                </div>
+                <div style="margin-top: 10px; font-size: 12px;">
+                    Last Updated: ${data.latest_date} ${data.latest_time}
+                </div>
+            </div>
+        `;
+    }
+
+    // Function to update the map with the latest data
+    function updateMapData(data) {
+        // Clear existing markers
+        map.eachLayer((layer) => {
+            if (layer instanceof L.Marker) {
+                map.removeLayer(layer);
+            }
+        });
+
+        // Add new marker with updated data
+        const marker = L.marker([10.178261036688674, 76.4308114346126], {
+            icon: createCustomMarker(data.latest_aqi)
+        }).addTo(map);
+
+        // Add popup to the marker
+        marker.bindPopup(createPopupContent(data), {
+            maxWidth: 300
+        });
+
+        // Open popup by default
+        marker.openPopup();
+    }
+
+    // Function to update AQI and related elements
+    function updateAQI() {
+        fetch('/fetch_latest_data/')
+            .then(response => response.json())
+            .then(data => {
+                // Update AQI display
+                const aqiValue = document.getElementById('aqiValue');
+                const aqiStatus = document.getElementById('aqiStatus');
+                const aqi = parseInt(data.latest_aqi);
+
+                aqiValue.textContent = aqi || '--';
+
+                let status, color;
+                if (aqi <= 50) {
+                    status = 'Good';
+                    color = '#4CAF50';
+                } else if (aqi <= 100) {
+                    status = 'Moderate';
+                    color = '#FFC107';
+                } else if (aqi <= 150) {
+                    status = 'Unhealthy for Sensitive Groups';
+                    color = '#FF9800';
+                } else if (aqi <= 200) {
+                    status = 'Unhealthy';
+                    color = '#F44336';
+                } else {
+                    status = 'Very Unhealthy';
+                    color = '#9C27B0';
+                }
+
+                aqiStatus.textContent = status;
+                aqiStatus.style.backgroundColor = color;
+
+                // Update risk indicators
+                updateRiskIndicators(aqi);
+
+                // Update the map
+                updateMapData(data);
+            })
+            .catch(error => console.error('Error fetching AQI data:', error));
+    }
+
+    // Update risk indicators based on AQI
+    function updateRiskIndicators(aqi) {
+        const recommendations = {
+            respiratory: ['Low', 'Moderate', 'High', 'Severe'],
+            health: ['Minimal', 'Moderate', 'Significant', 'Severe'],
+            activity: ['Normal Activity', 'Moderate Activity', 'Limited Activity', 'Stay Indoors'],
+            protection: ['Optional', 'Recommended', 'Required', 'Essential']
+        };
+
+        const index = Math.min(Math.floor(aqi / 50), 3);
+
+        document.getElementById('respiratoryRisk').textContent = recommendations.respiratory[index];
+        document.getElementById('healthImpact').textContent = recommendations.health[index];
+        document.getElementById('activityRec').textContent = recommendations.activity[index];
+        document.getElementById('protectionLevel').textContent = recommendations.protection[index];
+    }
+
+    // Initial update
+    updateAQI();
+
+    // Periodic update every 30 seconds
+    setInterval(updateAQI, 30000);
+</script>
+
+</body>
+</html>
